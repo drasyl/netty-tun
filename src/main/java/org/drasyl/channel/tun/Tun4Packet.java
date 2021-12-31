@@ -1,7 +1,6 @@
 package org.drasyl.channel.tun;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufUtil;
 import io.netty.util.internal.StringUtil;
 
 import java.net.InetAddress;
@@ -18,6 +17,8 @@ public class Tun4Packet extends TunPacket {
     public static final int IP4_SOURCE_ADDRESS_LENGTH = 4;
     public static final int IP4_DESTINATION_ADDRESS = 16;
     public static final int IP4_DESTINATION_ADDRESS_LENGTH = 4;
+    private InetAddress sourceAddress;
+    private InetAddress destinationAddress;
 
     public Tun4Packet(final ByteBuf data) {
         super(data);
@@ -30,7 +31,7 @@ public class Tun4Packet extends TunPacket {
     }
 
     public int internetHeaderLength() {
-        return (int) content().getUnsignedByte(IP4_INTERNET_HEADER_LENGTH) & 0x0f;
+        return content().getUnsignedByte(IP4_INTERNET_HEADER_LENGTH) & 0x0f;
     }
 
     public int totalLength() {
@@ -44,27 +45,38 @@ public class Tun4Packet extends TunPacket {
     @SuppressWarnings("java:S1166")
     @Override
     public InetAddress sourceAddress() {
-        try {
-            return InetAddress.getByAddress(ByteBufUtil.getBytes(content(), IP4_SOURCE_ADDRESS, IP4_SOURCE_ADDRESS_LENGTH));
+        if (sourceAddress == null) {
+            try {
+                byte[] dst = new byte[4];
+                content().getBytes(IP4_SOURCE_ADDRESS, dst, 0, IP4_SOURCE_ADDRESS_LENGTH);
+                sourceAddress = InetAddress.getByAddress(dst);
+            }
+            catch (final UnknownHostException e) {
+                // unreachable code
+                throw new IllegalStateException();
+            }
         }
-        catch (final UnknownHostException e) {
-            // unreachable code
-            throw new IllegalStateException();
-        }
+        return sourceAddress;
     }
 
     @SuppressWarnings("java:S1166")
     @Override
     public InetAddress destinationAddress() {
-        try {
-            return InetAddress.getByAddress(ByteBufUtil.getBytes(content(), IP4_DESTINATION_ADDRESS, IP4_DESTINATION_ADDRESS_LENGTH));
+        if (destinationAddress == null) {
+            try {
+                byte[] dst = new byte[4];
+                content().getBytes(IP4_DESTINATION_ADDRESS, dst, 0, IP4_DESTINATION_ADDRESS_LENGTH);
+                destinationAddress = InetAddress.getByAddress(dst);
+            }
+            catch (final UnknownHostException e) {
+                // unreachable code
+                throw new IllegalStateException();
+            }
         }
-        catch (final UnknownHostException e) {
-            // unreachable code
-            throw new IllegalStateException();
-        }
+        return destinationAddress;
     }
 
+    @SuppressWarnings("StringBufferReplaceableByString")
     @Override
     public String toString() {
         return new StringBuilder(StringUtil.simpleClassName(this))
