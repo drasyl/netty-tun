@@ -11,6 +11,7 @@ import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoop;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.util.concurrent.EventExecutor;
 import io.netty.util.internal.PlatformDependent;
 import org.drasyl.channel.tun.jna.TunDevice;
 import org.drasyl.channel.tun.jna.darwin.DarwinTunDevice;
@@ -144,13 +145,28 @@ public class TunChannel extends AbstractChannel {
     private void doRead() {
         if (readPending && isActive()) {
             readPending = false;
+
+            final EventExecutor executor = eventLoop();
             final ChannelPipeline p = pipeline();
-            try {
-                p.fireChannelRead(device.readPacket(alloc()));
-                p.fireChannelReadComplete();
+            if (executor.inEventLoop()) {
+                try {
+                    p.fireChannelRead(device.readPacket(alloc()));
+                    p.fireChannelReadComplete();
+                }
+                catch (final IOException e) {
+                    p.fireExceptionCaught(e);
+                }
             }
-            catch (final IOException e) {
-                p.fireExceptionCaught(e);
+            else {
+                eventLoop().execute(() -> {
+                    try {
+                        p.fireChannelRead(device.readPacket(alloc()));
+                        p.fireChannelReadComplete();
+                    }
+                    catch (final IOException e) {
+                        p.fireExceptionCaught(e);
+                    }
+                });
             }
         }
     }
