@@ -133,6 +133,8 @@ public final class WindowsTunDevice implements TunDevice {
         packetPointer.write(0, ByteBufUtil.getBytes(msg.content()), 0, msg.content().readableBytes());
 
         WintunSendPacket(session, packetPointer);
+
+        msg.release();
     }
 
     @Override

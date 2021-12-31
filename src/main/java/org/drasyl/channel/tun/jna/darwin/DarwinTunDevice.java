@@ -159,6 +159,8 @@ public final class DarwinTunDevice implements TunDevice {
 
             // write to socket
             write(fd, byteBuffer, new NativeLong(byteBuffer.capacity()));
+
+            byteBuf.release();
         }
         else {
             throw new IOException("Unknown address family: " + msg.getClass().getSimpleName());

@@ -111,7 +111,7 @@ public class TunChannel extends AbstractChannel {
                 break;
             }
 
-            device.writePacket(alloc(), (TunPacket) msg);
+            device.writePacket(alloc(), (TunPacket) (((TunPacket) msg).retain()));
 
             in.remove();
         }

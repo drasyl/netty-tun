@@ -122,6 +122,8 @@ public final class LinuxTunDevice implements TunDevice {
         // write to socket
         final ByteBuffer byteBuffer = msg.content().nioBuffer();
         write(fd, byteBuffer, new NativeLong(byteBuffer.remaining()));
+
+        msg.release();
     }
 
     @Override
