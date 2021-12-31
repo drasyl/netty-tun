@@ -148,25 +148,21 @@ public class TunChannel extends AbstractChannel {
 
             final EventExecutor executor = eventLoop();
             final ChannelPipeline p = pipeline();
-            if (executor.inEventLoop()) {
-                try {
-                    p.fireChannelRead(device.readPacket(alloc()));
+            try {
+                final TunPacket msg = device.readPacket(alloc());
+                if (executor.inEventLoop()) {
+                    p.fireChannelRead(msg);
                     p.fireChannelReadComplete();
                 }
-                catch (final IOException e) {
-                    p.fireExceptionCaught(e);
+                else {
+                    eventLoop().execute(() -> {
+                        p.fireChannelRead(msg);
+                        p.fireChannelReadComplete();
+                    });
                 }
             }
-            else {
-                eventLoop().execute(() -> {
-                    try {
-                        p.fireChannelRead(device.readPacket(alloc()));
-                        p.fireChannelReadComplete();
-                    }
-                    catch (final IOException e) {
-                        p.fireExceptionCaught(e);
-                    }
-                });
+            catch (final IOException e) {
+                p.fireExceptionCaught(e);
             }
         }
     }
