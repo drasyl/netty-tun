@@ -47,7 +47,7 @@ public class Tun4Packet extends TunPacket {
     public InetAddress sourceAddress() {
         if (sourceAddress == null) {
             try {
-                byte[] dst = new byte[4];
+                byte[] dst = new byte[IP4_DESTINATION_ADDRESS_LENGTH];
                 content().getBytes(IP4_SOURCE_ADDRESS, dst, 0, IP4_SOURCE_ADDRESS_LENGTH);
                 sourceAddress = InetAddress.getByAddress(dst);
             }
@@ -64,7 +64,7 @@ public class Tun4Packet extends TunPacket {
     public InetAddress destinationAddress() {
         if (destinationAddress == null) {
             try {
-                byte[] dst = new byte[4];
+                byte[] dst = new byte[IP4_DESTINATION_ADDRESS_LENGTH];
                 content().getBytes(IP4_DESTINATION_ADDRESS, dst, 0, IP4_DESTINATION_ADDRESS_LENGTH);
                 destinationAddress = InetAddress.getByAddress(dst);
             }

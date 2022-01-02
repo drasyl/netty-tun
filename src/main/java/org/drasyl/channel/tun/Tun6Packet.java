@@ -1,7 +1,6 @@
 package org.drasyl.channel.tun;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufUtil;
 import io.netty.util.internal.StringUtil;
 
 import java.net.InetAddress;
@@ -16,6 +15,8 @@ public class Tun6Packet extends TunPacket {
     public static final int IP6_SOURCE_ADDRESS_LENGTH = 16;
     public static final int IP6_DESTINATION_ADDRESS = 24;
     public static final int IP6_DESTINATION_ADDRESS_LENGTH = 16;
+    private InetAddress sourceAddress;
+    private InetAddress destinationAddress;
 
     public Tun6Packet(final ByteBuf data) {
         super(data);
@@ -34,25 +35,35 @@ public class Tun6Packet extends TunPacket {
     @SuppressWarnings("java:S1166")
     @Override
     public InetAddress sourceAddress() {
-        try {
-            return InetAddress.getByAddress(ByteBufUtil.getBytes(content(), IP6_SOURCE_ADDRESS, IP6_SOURCE_ADDRESS_LENGTH));
+        if (sourceAddress == null) {
+            try {
+                byte[] dst = new byte[IP6_SOURCE_ADDRESS_LENGTH];
+                content().getBytes(IP6_SOURCE_ADDRESS, dst, 0, IP6_SOURCE_ADDRESS_LENGTH);
+                sourceAddress = InetAddress.getByAddress(dst);
+            }
+            catch (final UnknownHostException e) {
+                // unreachable code
+                throw new IllegalStateException();
+            }
         }
-        catch (final UnknownHostException e) {
-            // unreachable code
-            throw new IllegalStateException();
-        }
+        return sourceAddress;
     }
 
     @SuppressWarnings("java:S1166")
     @Override
     public InetAddress destinationAddress() {
-        try {
-            return InetAddress.getByAddress(ByteBufUtil.getBytes(content(), IP6_DESTINATION_ADDRESS, IP6_DESTINATION_ADDRESS_LENGTH));
+        if (destinationAddress == null) {
+            try {
+                byte[] dst = new byte[IP6_SOURCE_ADDRESS_LENGTH];
+                content().getBytes(IP6_DESTINATION_ADDRESS, dst, 0, IP6_DESTINATION_ADDRESS_LENGTH);
+                destinationAddress = InetAddress.getByAddress(dst);
+            }
+            catch (final UnknownHostException e) {
+                // unreachable code
+                throw new IllegalStateException();
+            }
         }
-        catch (final UnknownHostException e) {
-            // unreachable code
-            throw new IllegalStateException();
-        }
+        return destinationAddress;
     }
 
     @Override
