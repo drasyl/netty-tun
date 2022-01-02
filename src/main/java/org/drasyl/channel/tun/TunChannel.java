@@ -1,7 +1,29 @@
+/*
+ * Copyright (c) 2021-2022 Heiko Bornholdt and Kevin Röbert
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+ * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
+ * OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 package org.drasyl.channel.tun;
 
 import io.netty.channel.AbstractChannel;
 import io.netty.channel.ChannelConfig;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelMetadata;
 import io.netty.channel.ChannelOutboundBuffer;
 import io.netty.channel.ChannelPipeline;
@@ -24,6 +46,20 @@ import java.nio.channels.AlreadyConnectedException;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.NotYetConnectedException;
 
+/**
+ * A {@link io.netty.channel.Channel} implementation that can be used to send or receive packets
+ * over a TUN interface.
+ * <p>
+ * To initialize a {@link TunChannel}, create a {@link TunAddress} object containing the desired
+ * name of the TUN device to open, and then bind the {@link TunChannel} to the address.
+ * <p>
+ * To send packets into the device (causing them to be received by the local host's network stack)
+ * create a {@link TunPacket} object and call {@link io.netty.channel.Channel#write(Object)}.
+ * <p>
+ * When the host's network stack sends packets out via the device, the packets are delivered to the
+ * channel causing a {@link io.netty.channel.ChannelInboundHandler#channelRead(ChannelHandlerContext,
+ * Object)} invocation.
+ */
 public class TunChannel extends AbstractChannel {
     enum State {OPEN, BOUND, CLOSED}
 
