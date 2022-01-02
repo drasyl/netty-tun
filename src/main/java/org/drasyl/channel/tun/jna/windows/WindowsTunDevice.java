@@ -47,7 +47,6 @@ import static org.drasyl.channel.tun.jna.windows.Wintun.WintunAllocateSendPacket
 import static org.drasyl.channel.tun.jna.windows.Wintun.WintunCloseAdapter;
 import static org.drasyl.channel.tun.jna.windows.Wintun.WintunCreateAdapter;
 import static org.drasyl.channel.tun.jna.windows.Wintun.WintunEndSession;
-import static org.drasyl.channel.tun.jna.windows.Wintun.WintunGetAdapterLUID;
 import static org.drasyl.channel.tun.jna.windows.Wintun.WintunGetReadWaitEvent;
 import static org.drasyl.channel.tun.jna.windows.Wintun.WintunReceivePacket;
 import static org.drasyl.channel.tun.jna.windows.Wintun.WintunReleaseReceivePacket;
@@ -172,19 +171,7 @@ public final class WindowsTunDevice implements TunDevice {
         }
     }
 
-    public WindowsTunDevice setIpv4AddressAndNetmask(final String address, final int netmask) {
-        final Pointer interfaceLuid = new Memory(8);
-        WintunGetAdapterLUID(adapter, interfaceLuid);
-        AddressAndNetmaskHelper.setIPv4AndNetmask(interfaceLuid, address, netmask);
-
-        return this;
-    }
-
-    public WindowsTunDevice setIpv6AddressAndNetmask(final String address, final int netmask) {
-        final Pointer interfaceLuid = new Memory(8);
-        WintunGetAdapterLUID(adapter, interfaceLuid);
-        AddressAndNetmaskHelper.setIPv6AndNetmask(interfaceLuid, address, netmask);
-
-        return this;
+    public WINTUN_ADAPTER_HANDLE adapter() {
+        return adapter;
     }
 }

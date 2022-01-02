@@ -38,7 +38,7 @@ import static org.drasyl.channel.tun.jna.windows.loader.LibraryLoader.PREFER_SYS
  * JNA mapping for the <a href="https://www.wintun.net/">Wintun Network Adapter</a>.
  */
 @SuppressWarnings({ "java:S100", "java:S117" })
-final class Wintun {
+public final class Wintun {
     private static final String DEFAULT_MODE = SystemPropertyUtil.get("tun.native.mode", PREFER_SYSTEM);
 
     static {
