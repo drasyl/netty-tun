@@ -171,6 +171,11 @@ public final class WindowsTunDevice implements TunDevice {
         }
     }
 
+    @Override
+    public boolean isClosed() {
+        return closed;
+    }
+
     public WINTUN_ADAPTER_HANDLE adapter() {
         return adapter;
     }

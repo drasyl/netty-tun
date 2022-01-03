@@ -143,27 +143,33 @@ public final class DarwinTunDevice implements TunDevice {
         // read from socket
         final int capacity = ADDRESS_FAMILY_SIZE + mtu.intValue();
         final ByteBuf maxByteBuf = alloc.buffer(capacity).writerIndex(capacity);
-        final ByteBuffer byteBuffer = maxByteBuf.nioBuffer();
-        final int bytesRead = read(fd, byteBuffer, mtu);
+        try {
+            final ByteBuffer byteBuffer = maxByteBuf.nioBuffer();
+            final int bytesRead = read(fd, byteBuffer, mtu);
 
-        // extract address family
-        final int addressFamily = maxByteBuf.getInt(0);
+            // extract address family
+            final int addressFamily = maxByteBuf.getInt(0);
 
-        // shrink bytebuf to actual required size
-        final ByteBuf actualByteBuf = maxByteBuf
-                .setIndex(ADDRESS_FAMILY_SIZE, bytesRead)
-                .capacity(bytesRead)
-                .slice();
+            // shrink bytebuf to actual required size
+            final ByteBuf actualByteBuf = maxByteBuf
+                    .setIndex(ADDRESS_FAMILY_SIZE, bytesRead)
+                    .capacity(bytesRead)
+                    .slice();
 
-        switch (addressFamily) {
-            case AF_INET:
-                return new Tun4Packet(actualByteBuf);
+            switch (addressFamily) {
+                case AF_INET:
+                    return new Tun4Packet(actualByteBuf);
 
-            case AF_INET6:
-                return new Tun4Packet(actualByteBuf);
+                case AF_INET6:
+                    return new Tun4Packet(actualByteBuf);
 
-            default:
-                throw new IOException("Unknown address family: " + addressFamily);
+                default:
+                    throw new IOException("Unknown address family: " + addressFamily);
+            }
+        }
+        catch (Exception e) {
+            maxByteBuf.release();
+            throw e;
         }
     }
 
@@ -186,6 +192,11 @@ public final class DarwinTunDevice implements TunDevice {
         else {
             throw new IOException("Unknown address family: " + msg.getClass().getSimpleName());
         }
+    }
+
+    @Override
+    public boolean isClosed() {
+        return closed;
     }
 
     @Override

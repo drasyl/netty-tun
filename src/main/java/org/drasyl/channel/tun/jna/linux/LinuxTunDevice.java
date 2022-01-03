@@ -111,26 +111,32 @@ public final class LinuxTunDevice implements TunDevice {
         // read from socket
         final int capacity = mtu.intValue();
         final ByteBuf maxByteBuf = alloc.buffer(capacity).writerIndex(capacity);
-        final ByteBuffer byteBuffer = maxByteBuf.nioBuffer();
-        final int bytesRead = read(fd, byteBuffer, mtu);
+        try {
+            final ByteBuffer byteBuffer = maxByteBuf.nioBuffer();
+            final int bytesRead = read(fd, byteBuffer, mtu);
 
-        // shrink bytebuf to actual required size
-        final ByteBuf actualByteBuf = maxByteBuf
-                .writerIndex(bytesRead)
-                .capacity(bytesRead)
-                .slice();
+            // shrink bytebuf to actual required size
+            final ByteBuf actualByteBuf = maxByteBuf
+                    .writerIndex(bytesRead)
+                    .capacity(bytesRead)
+                    .slice();
 
-        // extract ip version
-        final int version = Byte.toUnsignedInt(actualByteBuf.getByte(0)) >> 4;
+            // extract ip version
+            final int version = Byte.toUnsignedInt(actualByteBuf.getByte(0)) >> 4;
 
-        if (version == 4) {
-            return new Tun4Packet(actualByteBuf);
+            if (version == 4) {
+                return new Tun4Packet(actualByteBuf);
+            }
+            else if (version == 6) {
+                return new Tun6Packet(actualByteBuf);
+            }
+            else {
+                throw new IOException("Unknown protocol: " + version);
+            }
         }
-        else if (version == 6) {
-            return new Tun6Packet(actualByteBuf);
-        }
-        else {
-            throw new IOException("Unknown protocol: " + version);
+        catch (final Exception e) {
+            maxByteBuf.release();
+            throw e;
         }
     }
 
@@ -155,5 +161,10 @@ public final class LinuxTunDevice implements TunDevice {
             // close tun device
             LibC.close(fd);
         }
+    }
+
+    @Override
+    public boolean isClosed() {
+        return closed;
     }
 }
