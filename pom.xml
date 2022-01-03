@@ -30,6 +30,8 @@
     <artifactId>netty-tun</artifactId>
     <version>1.0-SNAPSHOT</version>
 
+    <name>netty channel communicating via TUN devices</name>
+    <description>This artifact contains a Channel implementation that can be used to send or receive packets over a TUN interface.</description>
     <url>https://drasyl.org/</url>
 
     <inceptionYear>2020</inceptionYear>
@@ -81,6 +83,11 @@
         <tag>HEAD</tag>
     </scm>
 
+    <issueManagement>
+        <system>GitHub</system>
+        <url>https://github.com/drasyl-overlay/netty-tun/issues</url>
+    </issueManagement>
+
     <distributionManagement>
         <repository>
             <id>ossrh</id>
@@ -108,7 +115,6 @@
             <artifactId>netty-transport</artifactId>
             <version>4.1.72.Final</version>
         </dependency>
-
         <dependency>
             <groupId>net.java.dev.jna</groupId>
             <artifactId>jna</artifactId>
