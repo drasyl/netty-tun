@@ -27,7 +27,9 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import org.drasyl.channel.tun.Tun4Packet;
 import org.drasyl.channel.tun.Tun6Packet;
+import org.drasyl.channel.tun.TunAddress;
 import org.drasyl.channel.tun.TunPacket;
+import org.drasyl.channel.tun.jna.AbstractTunDevice;
 import org.drasyl.channel.tun.jna.TunDevice;
 import org.drasyl.channel.tun.jna.shared.If.Ifreq;
 import org.drasyl.channel.tun.jna.shared.LibC;
@@ -36,7 +38,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import static java.nio.charset.StandardCharsets.US_ASCII;
-import static java.util.Objects.requireNonNull;
 import static org.drasyl.channel.tun.jna.linux.Fcntl.O_RDWR;
 import static org.drasyl.channel.tun.jna.linux.IfTun.IFF_NO_PI;
 import static org.drasyl.channel.tun.jna.linux.IfTun.IFF_TUN;
@@ -53,17 +54,15 @@ import static org.drasyl.channel.tun.jna.shared.Socket.SOCK_DGRAM;
 /**
  * {@link TunDevice} implementation for Linux-based platforms.
  */
-public final class LinuxTunDevice implements TunDevice {
+public final class LinuxTunDevice extends AbstractTunDevice {
     private static final IllegalArgumentException ILLEGAL_NAME_EXCEPTION = new IllegalArgumentException("Device name must be an ASCII string shorter than 16 characters or null.");
     private final int fd;
     private final NativeLong mtu;
-    private final String name;
-    private boolean closed;
 
-    private LinuxTunDevice(final int fd, final int mtu, final String name) {
+    private LinuxTunDevice(final int fd, final int mtu, final TunAddress localAddress) {
+        super(localAddress);
         this.fd = fd;
         this.mtu = new NativeLong(mtu);
-        this.name = requireNonNull(name);
     }
 
     public static TunDevice open(String name) throws IOException {
@@ -93,12 +92,7 @@ public final class LinuxTunDevice implements TunDevice {
         ioctl(s, SIOCGIFMTU, ifreq2);
         final int mtu = ifreq2.ifr_ifru.ifru_mtu;
 
-        return new LinuxTunDevice(fd, mtu, deviceName);
-    }
-
-    @Override
-    public String name() {
-        return name;
+        return new LinuxTunDevice(fd, mtu, new TunAddress(deviceName));
     }
 
     @SuppressWarnings("java:S109")

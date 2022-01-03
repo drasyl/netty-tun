@@ -31,7 +31,9 @@ import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.ByteBufUtil;
 import org.drasyl.channel.tun.Tun4Packet;
 import org.drasyl.channel.tun.Tun6Packet;
+import org.drasyl.channel.tun.TunAddress;
 import org.drasyl.channel.tun.TunPacket;
+import org.drasyl.channel.tun.jna.AbstractTunDevice;
 import org.drasyl.channel.tun.jna.TunDevice;
 import org.drasyl.channel.tun.jna.windows.Guid.GUID;
 import org.drasyl.channel.tun.jna.windows.WinDef.DWORD;
@@ -56,19 +58,17 @@ import static org.drasyl.channel.tun.jna.windows.Wintun.WintunStartSession;
 /**
  * {@link TunDevice} implementation for Windows-based platforms.
  */
-public final class WindowsTunDevice implements TunDevice {
+public final class WindowsTunDevice extends AbstractTunDevice {
     public static final WString TUNNEL_TYPE = new WString("drasyl");
     private final WINTUN_ADAPTER_HANDLE adapter;
     private final WINTUN_SESSION_HANDLE session;
-    private final String name;
-    private boolean closed;
 
     private WindowsTunDevice(final WINTUN_ADAPTER_HANDLE adapter,
                              final WINTUN_SESSION_HANDLE session,
-                             final String name) {
+                             final TunAddress localAddress) {
+        super(localAddress);
         this.adapter = requireNonNull(adapter);
         this.session = requireNonNull(session);
-        this.name = requireNonNull(name);
     }
 
     public static TunDevice open(String name) throws IOException {
@@ -94,12 +94,7 @@ public final class WindowsTunDevice implements TunDevice {
             throw new IOException(e);
         }
 
-        return new WindowsTunDevice(adapter, session, name);
-    }
-
-    @Override
-    public String name() {
-        return name;
+        return new WindowsTunDevice(adapter, session, new TunAddress(name));
     }
 
     @SuppressWarnings("java:S109")

@@ -31,7 +31,9 @@ import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.CompositeByteBuf;
 import io.netty.buffer.Unpooled;
 import org.drasyl.channel.tun.Tun4Packet;
+import org.drasyl.channel.tun.TunAddress;
 import org.drasyl.channel.tun.TunPacket;
+import org.drasyl.channel.tun.jna.AbstractTunDevice;
 import org.drasyl.channel.tun.jna.TunDevice;
 import org.drasyl.channel.tun.jna.darwin.KernControl.CtlInfo;
 import org.drasyl.channel.tun.jna.darwin.KernControl.SockaddrCtl;
@@ -42,7 +44,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import static java.nio.charset.StandardCharsets.US_ASCII;
-import static java.util.Objects.requireNonNull;
 import static org.drasyl.channel.tun.jna.darwin.IfUtun.UTUN_CONTROL_NAME;
 import static org.drasyl.channel.tun.jna.darwin.IfUtun.UTUN_OPT_IFNAME;
 import static org.drasyl.channel.tun.jna.darwin.Ioctl.SIOCGIFMTU;
@@ -63,7 +64,7 @@ import static org.drasyl.channel.tun.jna.shared.Socket.SOCK_DGRAM;
 /**
  * {@link TunDevice} implementation for Darwin-based platforms.
  */
-public final class DarwinTunDevice implements TunDevice {
+public final class DarwinTunDevice extends AbstractTunDevice {
     private static final String DEVICE_PREFIX = "utun";
     private static final IllegalArgumentException ILLEGAL_NAME_EXCEPTION = new IllegalArgumentException("Device name must be 'utun<index>' or null.");
     private static final ByteBuf ADDRESS_FAMILY_BUF = Unpooled.unreleasableBuffer(Unpooled.wrappedBuffer(new byte[]{
@@ -71,13 +72,11 @@ public final class DarwinTunDevice implements TunDevice {
     }));
     private final int fd;
     private final NativeLong mtu;
-    private final String name;
-    private boolean closed;
 
-    private DarwinTunDevice(final int fd, final int mtu, final String name) {
+    private DarwinTunDevice(final int fd, final int mtu, final TunAddress localAddress) {
+        super(localAddress);
         this.fd = fd;
         this.mtu = new NativeLong(mtu);
-        this.name = requireNonNull(name);
     }
 
     public static TunDevice open(final String name) throws IOException {
@@ -126,12 +125,7 @@ public final class DarwinTunDevice implements TunDevice {
         ioctl(fd, SIOCGIFMTU, ifreq);
         final int mtu = ifreq.ifr_ifru.ifru_mtu;
 
-        return new DarwinTunDevice(fd, mtu, deviceName);
-    }
-
-    @Override
-    public String name() {
-        return name;
+        return new DarwinTunDevice(fd, mtu, new TunAddress(deviceName));
     }
 
     @Override
