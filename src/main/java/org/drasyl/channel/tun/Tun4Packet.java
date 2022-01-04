@@ -112,7 +112,6 @@ public class Tun4Packet extends TunPacket {
                 .append(", src=").append(sourceAddress())
                 .append(", dst=").append(destinationAddress())
                 .append(", len=").append(totalLength())
-                .append(", content=").append(content())
                 .append(']').toString();
     }
 }
