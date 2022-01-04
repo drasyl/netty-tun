@@ -108,7 +108,8 @@ public class Tun4Packet extends TunPacket {
     public String toString() {
         return new StringBuilder(StringUtil.simpleClassName(this))
                 .append('[')
-                .append("src=").append(sourceAddress())
+                .append("id=").append(identification())
+                .append(", src=").append(sourceAddress())
                 .append(", dst=").append(destinationAddress())
                 .append(", len=").append(totalLength())
                 .append(", content=").append(content())
