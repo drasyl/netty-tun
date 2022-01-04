@@ -34,6 +34,7 @@ public class Tun4Packet extends TunPacket {
     // https://datatracker.ietf.org/doc/html/rfc791#section-3.1
     public static final int IP4_INTERNET_HEADER_LENGTH = 0;
     public static final int IP4_TOTAL_LENGTH = 2;
+    public static final int IP4_IDENTIFICATION = 4;
     public static final int IP4_PROTOCOL = 9;
     public static final int IP4_SOURCE_ADDRESS = 12;
     public static final int IP4_SOURCE_ADDRESS_LENGTH = 4;
@@ -58,6 +59,10 @@ public class Tun4Packet extends TunPacket {
 
     public int totalLength() {
         return content().getUnsignedShort(IP4_TOTAL_LENGTH);
+    }
+
+    public int identification() {
+        return content().getUnsignedShort(IP4_IDENTIFICATION);
     }
 
     public int protocol() {
