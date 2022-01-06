@@ -77,8 +77,8 @@
     </developers>
 
     <scm>
-        <connection>scm:git:git://github.com/drasyl-overlay/netty-tun.git</connection>
-        <developerConnection>scm:git:git://github.com/drasyl-overlay/netty-tun.git</developerConnection>
+        <connection>scm:git:https://github.com/drasyl-overlay/netty-tun.git</connection>
+        <developerConnection>scm:git:https://github.com/drasyl-overlay/netty-tun.git</developerConnection>
         <url>https://github.com/drasyl-overlay/netty-tun</url>
         <tag>HEAD</tag>
     </scm>
