@@ -1,4 +1,5 @@
-# netty-tun [![MIT License](https://img.shields.io/badge/license-MIT-blue)](https://opensource.org/licenses/MIT)
+# netty-tun [![MIT License](https://img.shields.io/badge/license-MIT-blue)](https://opensource.org/licenses/MIT) [![Maven Central](https://img.shields.io/maven-central/v/org.drasyl/netty-tun.svg)](https://mvnrepository.com/artifact/org.drasyl/netty-tun) [![Javadoc](https://javadoc.io/badge2/org.drasyl/netty-tun/javadoc.svg)](https://www.javadoc.io/doc/org.drasyl/netty-tun)
+
 
 netty channel communicating via TUN devices (tested on macOS, Ubuntu/Linux, and Windows 10/11).
 
