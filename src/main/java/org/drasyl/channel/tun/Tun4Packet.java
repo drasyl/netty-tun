@@ -120,7 +120,7 @@ public class Tun4Packet extends TunPacket {
     public InetAddress sourceAddress() {
         if (sourceAddress == null) {
             try {
-                byte[] dst = new byte[INET4_DESTINATION_ADDRESS_LENGTH];
+                byte[] dst = new byte[INET4_SOURCE_ADDRESS_LENGTH];
                 content().getBytes(INET4_SOURCE_ADDRESS, dst, 0, INET4_SOURCE_ADDRESS_LENGTH);
                 sourceAddress = InetAddress.getByAddress(dst);
             }
