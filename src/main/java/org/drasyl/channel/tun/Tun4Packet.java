@@ -109,12 +109,6 @@ public class Tun4Packet extends TunPacket {
         return content().getUnsignedShort(INET4_HEADER_CHECKSUM);
     }
 
-    public byte[] data() {
-        final byte[] data = new byte[content().readableBytes() - INET4_HEADER_LENGTH];
-        content().getBytes(INET4_HEADER_LENGTH, data);
-        return data;
-    }
-
     @SuppressWarnings("java:S1166")
     @Override
     public InetAddress sourceAddress() {
@@ -147,6 +141,12 @@ public class Tun4Packet extends TunPacket {
             }
         }
         return destinationAddress;
+    }
+
+    public byte[] data() {
+        final byte[] data = new byte[content().readableBytes() - INET4_HEADER_LENGTH];
+        content().getBytes(INET4_HEADER_LENGTH, data);
+        return data;
     }
 
     @SuppressWarnings("StringBufferReplaceableByString")
