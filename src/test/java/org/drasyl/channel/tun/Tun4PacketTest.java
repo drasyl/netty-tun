@@ -115,7 +115,8 @@ class Tun4PacketTest {
 
     @Test
     void testConstructor() {
-        assertThrows(IllegalArgumentException.class, () -> new Tun4Packet(packet.content().readBytes(19)));
+        final ByteBuf buf = packet.content().readBytes(19);
+        assertThrows(IllegalArgumentException.class, () -> new Tun4Packet(buf));
     }
 
     @Test
@@ -235,5 +236,25 @@ class Tun4PacketTest {
     @Test
     void testToString() {
         assertEquals("Tun4Packet[id=61565, len=62, src=10.225.215.84, dst=224.0.0.251]", packet.toString());
+    }
+
+    @Test
+    void verifyChecksum() {
+        ByteBuf buf = Unpooled.wrappedBuffer(new byte[]{
+                69, 0, 0, 115, 0, 0, 64, 0, 64, 17, -72, 97, -64, -88, 0, 1, -64, -88, 0, -57
+        });
+
+        final Tun4Packet tun4Packet = new Tun4Packet(buf);
+        assertTrue(tun4Packet.verifyChecksum());
+    }
+
+    @Test
+    void calculateChecksum() {
+        // from https://en.wikipedia.org/wiki/IPv4_header_checksum#Calculating_the_IPv4_header_checksum
+        ByteBuf buf = Unpooled.wrappedBuffer(new byte[]{
+                69, 0, 0, 115, 0, 0, 64, 0, 64, 17, 0, 0, -64, -88, 0, 1, -64, -88, 0, -57
+        });
+
+        assertEquals(47201, Tun4Packet.calculateChecksum(buf));
     }
 }

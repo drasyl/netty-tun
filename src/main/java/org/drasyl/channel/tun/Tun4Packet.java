@@ -30,6 +30,7 @@ import java.net.UnknownHostException;
 /**
  * IPv4-based {@link TunPacket}.
  */
+@SuppressWarnings("unused")
 public class Tun4Packet extends TunPacket {
     public static final int INET4_HEADER_LENGTH = 20;
     // https://datatracker.ietf.org/doc/html/rfc791#section-3.1
@@ -159,5 +160,17 @@ public class Tun4Packet extends TunPacket {
                 .append(", src=").append(sourceAddress().getHostAddress())
                 .append(", dst=").append(destinationAddress().getHostAddress())
                 .append(']').toString();
+    }
+
+    public boolean verifyChecksum() {
+        return calculateChecksum(content()) == 0;
+    }
+
+    public static int calculateChecksum(final ByteBuf buf) {
+        int sum = 0;
+        for (int i = 0; i < INET4_HEADER_LENGTH; i += 2) {
+            sum += buf.getUnsignedShort(i);
+        }
+        return (~((sum & 0xffff) + (sum >> 16))) & 0xffff;
     }
 }
