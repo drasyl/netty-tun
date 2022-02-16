@@ -26,6 +26,7 @@ import io.netty.buffer.Unpooled;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
@@ -256,5 +257,44 @@ class Tun4PacketTest {
         });
 
         assertEquals(47201, Tun4Packet.calculateChecksum(buf));
+    }
+
+    @Test
+    void populatePacket() throws UnknownHostException {
+        final int typeOfService = 0;
+        final int identification = 61565;
+        final int flags = 2;
+        final int fragmentOffset = 0;
+        final int timeToLive = 64;
+        final InetProtocol protocol = InetProtocol.UDP;
+        final boolean calculateChecksum = true;
+        final Inet4Address sourceAddress = (Inet4Address) InetAddress.getByName("123.234.123.234");
+        final Inet4Address destinationAddress = (Inet4Address) InetAddress.getByName("234.123.234.123");
+        // udp
+        final byte[] data = {
+                1, 2, 3, 4,
+                0, 8, 0, 0
+        };
+
+        final ByteBuf buffer = Unpooled.buffer();
+        try {
+            Tun4Packet.populatePacket(buffer, typeOfService, identification, flags, fragmentOffset, timeToLive, protocol, calculateChecksum, sourceAddress, destinationAddress, data);
+            Tun4Packet packet = new Tun4Packet(buffer);
+
+            assertEquals(typeOfService, packet.typeOfService());
+            assertEquals(identification, packet.identification());
+            assertEquals(flags, packet.flags());
+            assertEquals(fragmentOffset, packet.fragmentOffset());
+            assertEquals(timeToLive, packet.timeToLive());
+            assertEquals(timeToLive, packet.timeToLive());
+            assertEquals(protocol.decimal, packet.protocol());
+            assertEquals(sourceAddress, packet.sourceAddress());
+            assertEquals(destinationAddress, packet.destinationAddress());
+            assertArrayEquals(data, packet.data());
+            assertTrue(packet.verifyChecksum());
+        }
+        finally {
+            buffer.release();
+        }
     }
 }

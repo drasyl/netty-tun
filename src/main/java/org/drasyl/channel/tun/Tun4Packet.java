@@ -24,6 +24,7 @@ package org.drasyl.channel.tun;
 import io.netty.buffer.ByteBuf;
 import io.netty.util.internal.StringUtil;
 
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
@@ -172,5 +173,83 @@ public class Tun4Packet extends TunPacket {
             sum += buf.getUnsignedShort(i);
         }
         return (~((sum & 0xffff) + (sum >> 16))) & 0xffff;
+    }
+
+    @SuppressWarnings({ "java:S107", "UnusedReturnValue" })
+    public static ByteBuf populatePacket(final ByteBuf buf,
+                                         final int typeOfService,
+                                         final int identification,
+                                         final int flags,
+                                         final int fragmentOffset,
+                                         final int timeToLive,
+                                         final int protocol,
+                                         final boolean calculateChecksum,
+                                         final Inet4Address sourceAddress,
+                                         final Inet4Address destinationAddress,
+                                         final byte[] data) {
+        // version & ihl
+        final int version = 4;
+        final int ihl = 5;
+
+        int versionIhl = 0;
+        versionIhl |= (version & 0xf) << 4;
+        versionIhl |= ihl & 0xf;
+        buf.setByte(INET4_VERSION_AND_INTERNET_HEADER_LENGTH, versionIhl);
+
+        // type of service
+        buf.setShort(INET4_TYPE_OF_SERVICE, typeOfService);
+
+        // total length
+        final int totalLength = ihl * 4 + data.length;
+        buf.setShort(INET4_TOTAL_LENGTH, totalLength);
+
+        // identification
+        buf.setShort(INET4_IDENTIFICATION, identification);
+
+        // flags & fragment offset
+        int flagsFragmentOffset = 0;
+        flagsFragmentOffset |= (flags & 0x7) << 5;
+        flagsFragmentOffset |= (fragmentOffset & 0x1f) << 3;
+        buf.setByte(INET4_FLAGS_AND_FRAGMENT_OFFSET, flagsFragmentOffset);
+
+        // time to live
+        buf.setByte(INET4_TIME_TO_LIVE, timeToLive);
+
+        // protocol
+        buf.setByte(INET4_PROTOCOL, protocol);
+
+        // source address
+        buf.setBytes(INET4_SOURCE_ADDRESS, sourceAddress.getAddress());
+
+        // destination address
+        buf.setBytes(INET4_DESTINATION_ADDRESS, destinationAddress.getAddress());
+
+        // header checksum
+        if (calculateChecksum) {
+            final int headerChecksum = calculateChecksum(buf);
+            buf.setShort(INET4_HEADER_CHECKSUM, headerChecksum);
+        }
+
+        // data
+        buf.setBytes(INET4_HEADER_LENGTH, data);
+
+        buf.setIndex(0, totalLength);
+
+        return buf;
+    }
+
+    @SuppressWarnings({ "java:S107", "UnusedReturnValue" })
+    public static ByteBuf populatePacket(final ByteBuf buf,
+                                         final int typeOfService,
+                                         final int identification,
+                                         final int flags,
+                                         final int fragmentOffset,
+                                         final int timeToLive,
+                                         final InetProtocol protocol,
+                                         final boolean calculateChecksum,
+                                         final Inet4Address sourceAddress,
+                                         final Inet4Address destinationAddress,
+                                         final byte[] data) {
+        return populatePacket(buf, typeOfService, identification, flags, fragmentOffset, timeToLive, protocol.decimal, calculateChecksum, sourceAddress, destinationAddress, data);
     }
 }
