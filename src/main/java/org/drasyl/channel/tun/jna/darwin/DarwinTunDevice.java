@@ -47,6 +47,7 @@ import static java.nio.charset.StandardCharsets.US_ASCII;
 import static org.drasyl.channel.tun.jna.darwin.IfUtun.UTUN_CONTROL_NAME;
 import static org.drasyl.channel.tun.jna.darwin.IfUtun.UTUN_OPT_IFNAME;
 import static org.drasyl.channel.tun.jna.darwin.Ioctl.SIOCGIFMTU;
+import static org.drasyl.channel.tun.jna.darwin.Ioctl.SIOCSIFMTU;
 import static org.drasyl.channel.tun.jna.darwin.KernControl.CTLIOCGINFO;
 import static org.drasyl.channel.tun.jna.darwin.SysDomain.SYSPROTO_CONTROL;
 import static org.drasyl.channel.tun.jna.shared.LibC.connect;
@@ -79,7 +80,7 @@ public final class DarwinTunDevice extends AbstractTunDevice {
         this.mtu = new NativeLong(mtu);
     }
 
-    public static TunDevice open(final String name) throws IOException {
+    public static TunDevice open(final String name, int mtu) throws IOException {
         final int index;
         if (name != null) {
             if (name.startsWith(DEVICE_PREFIX)) {
@@ -120,10 +121,17 @@ public final class DarwinTunDevice extends AbstractTunDevice {
 
         final String deviceName = Native.toString(sockName.name, US_ASCII);
 
-        // get mtu
-        final Ifreq ifreq = new Ifreq(deviceName);
-        ioctl(fd, SIOCGIFMTU, ifreq);
-        final int mtu = ifreq.ifr_ifru.ifru_mtu;
+        if (mtu != 0) {
+            // set mtu
+            final Ifreq ifreq = new Ifreq(deviceName, mtu);
+            ioctl(fd, SIOCSIFMTU, ifreq);
+        }
+        else {
+            // get mtu
+            final Ifreq ifreq = new Ifreq(deviceName);
+            ioctl(fd, SIOCGIFMTU, ifreq);
+            mtu = ifreq.ifr_ifru.ifru_mtu;
+        }
 
         return new DarwinTunDevice(fd, mtu, new TunAddress(deviceName));
     }

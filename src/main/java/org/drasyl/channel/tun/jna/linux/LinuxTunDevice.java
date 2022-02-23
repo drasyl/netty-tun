@@ -43,6 +43,7 @@ import static org.drasyl.channel.tun.jna.linux.IfTun.IFF_NO_PI;
 import static org.drasyl.channel.tun.jna.linux.IfTun.IFF_TUN;
 import static org.drasyl.channel.tun.jna.linux.IfTun.TUNSETIFF;
 import static org.drasyl.channel.tun.jna.linux.Sockios.SIOCGIFMTU;
+import static org.drasyl.channel.tun.jna.linux.Sockios.SIOCSIFMTU;
 import static org.drasyl.channel.tun.jna.shared.If.IFNAMSIZ;
 import static org.drasyl.channel.tun.jna.shared.LibC.ioctl;
 import static org.drasyl.channel.tun.jna.shared.LibC.read;
@@ -65,7 +66,7 @@ public final class LinuxTunDevice extends AbstractTunDevice {
         this.mtu = new NativeLong(mtu);
     }
 
-    public static TunDevice open(String name) throws IOException {
+    public static TunDevice open(String name, int mtu) throws IOException {
         if (name != null && name.isEmpty()) {
             name = null;
         }
@@ -86,11 +87,20 @@ public final class LinuxTunDevice extends AbstractTunDevice {
 
         final String deviceName = Native.toString(ifreq.ifr_name, US_ASCII);
 
-        // get mtu
         final int s = socket(AF_INET, SOCK_DGRAM, 0);
-        final Ifreq ifreq2 = new Ifreq(deviceName);
-        ioctl(s, SIOCGIFMTU, ifreq2);
-        final int mtu = ifreq2.ifr_ifru.ifru_mtu;
+        if (mtu != 0) {
+            // set mtu
+            System.out.println("set = " + mtu);
+            final Ifreq ifreq2 = new Ifreq(deviceName, mtu);
+            ioctl(s, SIOCSIFMTU, ifreq2);
+            mtu = ifreq2.ifr_ifru.ifru_mtu;
+        }
+        else {
+            // get mtu
+            final Ifreq ifreq2 = new Ifreq(deviceName);
+            ioctl(s, SIOCGIFMTU, ifreq2);
+            mtu = ifreq2.ifr_ifru.ifru_mtu;
+        }
 
         return new LinuxTunDevice(fd, mtu, new TunAddress(deviceName));
     }

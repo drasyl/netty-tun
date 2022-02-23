@@ -113,13 +113,13 @@ public class TunChannel extends AbstractChannel {
     @Override
     protected void doBind(final SocketAddress localAddress) throws Exception {
         if (PlatformDependent.isOsx()) {
-            device = DarwinTunDevice.open(((TunAddress) localAddress).ifName());
+            device = DarwinTunDevice.open(((TunAddress) localAddress).ifName(), 0);
         }
         else if (PlatformDependent.isWindows()) {
             device = WindowsTunDevice.open(((TunAddress) localAddress).ifName());
         }
         else {
-            device = LinuxTunDevice.open(((TunAddress) localAddress).ifName());
+            device = LinuxTunDevice.open(((TunAddress) localAddress).ifName(), 0);
         }
     }
 

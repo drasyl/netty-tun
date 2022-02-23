@@ -29,6 +29,8 @@ import com.sun.jna.NativeLong;
 final class Sockios {
     // get MTU size
     public static final NativeLong SIOCGIFMTU = new NativeLong(0x8921L);
+    // set MTU size
+    public static final NativeLong SIOCSIFMTU = new NativeLong(0x8922L);
 
     private Sockios() {
         // JNA mapping

@@ -30,6 +30,8 @@ import com.sun.jna.NativeLong;
 final class Ioctl {
     // get MTU size
     public static final NativeLong SIOCGIFMTU = new NativeLong(0xc0206933L);
+    // set MTU size
+    public static final NativeLong SIOCSIFMTU = new NativeLong(0x80206934L);
 
     private Ioctl() {
         // JNA mapping
