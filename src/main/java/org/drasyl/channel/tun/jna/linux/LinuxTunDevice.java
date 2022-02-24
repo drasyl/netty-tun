@@ -90,7 +90,6 @@ public final class LinuxTunDevice extends AbstractTunDevice {
         final int s = socket(AF_INET, SOCK_DGRAM, 0);
         if (mtu != 0) {
             // set mtu
-            System.out.println("set = " + mtu);
             final Ifreq ifreq2 = new Ifreq(deviceName, mtu);
             ioctl(s, SIOCSIFMTU, ifreq2);
             mtu = ifreq2.ifr_ifru.ifru_mtu;
