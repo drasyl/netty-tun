@@ -19,20 +19,34 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.drasyl.channel.tun.jna.linux;
+package org.drasyl.channel.tun;
 
-import com.sun.jna.NativeLong;
+import io.netty.channel.ChannelConfig;
 
 /**
- * JNA mapping for <a href="https://github.com/torvalds/linux/blob/5bfc75d92efd494db37f5c4c173d3639d4772966/include/uapi/linux/sockios.h">sockios.h</a>.
+ * A {@link ChannelConfig} for a {@link TunChannel}.
+ *
+ * <h3>Available options</h3>
+ * <p>
+ * In addition to the options provided by {@link ChannelConfig}, {@link TunChannelConfig} allows the
+ * following options in the option map:
+ *
+ * <table border="1" cellspacing="0" cellpadding="6">
+ * <tr>
+ * <th>Name</th><th>Associated setter method</th>
+ * </tr><tr>
+ * <td>{@link TunChannelOption#TUN_MTU}</td><td>{@link #setMtu(int)}</td>
+ * </tr>
+ * </table>
  */
-final class Sockios {
-    // get MTU size
-    public static final NativeLong SIOCGIFMTU = new NativeLong(0x8921L);
-    // set MTU size
-    public static final NativeLong SIOCSIFMTU = new NativeLong(0x8922L);
+public interface TunChannelConfig extends ChannelConfig {
+    /**
+     * Gets the {@link TunChannelOption#TUN_MTU} option.
+     */
+    int getMtu();
 
-    private Sockios() {
-        // JNA mapping
-    }
+    /**
+     * Sets the {@link TunChannelOption#TUN_MTU} option.
+     */
+    TunChannelConfig setMtu(int mtu);
 }

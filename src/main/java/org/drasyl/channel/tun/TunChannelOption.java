@@ -19,20 +19,21 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.drasyl.channel.tun.jna.linux;
+package org.drasyl.channel.tun;
 
-import com.sun.jna.NativeLong;
+import io.netty.channel.ChannelOption;
 
 /**
- * JNA mapping for <a href="https://github.com/torvalds/linux/blob/5bfc75d92efd494db37f5c4c173d3639d4772966/include/uapi/linux/sockios.h">sockios.h</a>.
+ * Provides {@link ChannelOption}s for {@link TunChannel}s.
  */
-final class Sockios {
-    // get MTU size
-    public static final NativeLong SIOCGIFMTU = new NativeLong(0x8921L);
-    // set MTU size
-    public static final NativeLong SIOCSIFMTU = new NativeLong(0x8922L);
+public final class TunChannelOption<T> extends ChannelOption<T> {
+    /**
+     * Defines MTU for the created tun device (not supported on windows).
+     */
+    public static final ChannelOption<Integer> TUN_MTU = valueOf("TUN_MTU");
 
-    private Sockios() {
-        // JNA mapping
+    @SuppressWarnings({ "java:S1144", "java:S1874" })
+    private TunChannelOption(final String name) {
+        super(name);
     }
 }

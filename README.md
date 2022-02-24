@@ -21,6 +21,8 @@ finally {
 }
 ```
 
+### IP Address/Netmask
+
 You can now assign an IP address and netmask to the created network interface (you can query the
 actual interface name by
 calling [Channel#localAddress()](https://netty.io/4.1/api/io/netty/channel/Channel.html#localAddress--)):
@@ -43,4 +45,15 @@ New-NetIPAddress -InterfaceIndex $InterfaceIndex -IPAddress 10.10.10.10 -PrefixL
 
 # to allow peers access local services, you may mark the tun network as "private"
 Set-NetConnectionProfile -InterfaceIndex $InterfaceIndex -NetworkCategory "Private"
+```
+
+## MTU
+
+The MTU size of the created network interface is by default 1500 on macOS/Linux and 65535 on Windows.
+
+On macOS/Linux is can be adjusted by passing the channel option [`TunChannelOption.TUN_MTU`](https://github.com/drasyl-overlay/netty-tun/blob/master/src/main/java/org/drasyl/channel/tun/TunChannelOption.java) to the [`Bootstrap`](https://netty.io/4.1/api/io/netty/bootstrap/Bootstrap.html) object.
+
+On Windows you have to use the following command:
+```powershell
+netsh interface ipv4 set subinterface tun0 mtu=1234 store=active
 ```
