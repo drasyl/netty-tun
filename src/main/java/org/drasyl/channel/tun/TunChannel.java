@@ -28,7 +28,6 @@ import io.netty.channel.ChannelMetadata;
 import io.netty.channel.ChannelOutboundBuffer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.ChannelPromise;
-import io.netty.channel.DefaultChannelConfig;
 import io.netty.channel.EventLoop;
 import io.netty.channel.RecvByteBufAllocator;
 import io.netty.channel.nio.NioEventLoop;
@@ -65,7 +64,7 @@ public class TunChannel extends AbstractChannel {
     private static final String EXPECTED_TYPES =
             " (expected: " + StringUtil.simpleClassName(TunPacket.class) + ')';
     final Runnable readTask = this::doRead;
-    private final ChannelConfig config = new DefaultChannelConfig(this);
+    private final TunChannelConfig config = new DefaultTunChannelConfig(this);
     private final List<Object> readBuf = new ArrayList<>();
     private boolean readPending;
     private final EventLoop readLoop = new NioEventLoopGroup(1).next();
@@ -81,7 +80,7 @@ public class TunChannel extends AbstractChannel {
     }
 
     @Override
-    public ChannelConfig config() {
+    public TunChannelConfig config() {
         return config;
     }
 
@@ -113,13 +112,13 @@ public class TunChannel extends AbstractChannel {
     @Override
     protected void doBind(final SocketAddress localAddress) throws Exception {
         if (PlatformDependent.isOsx()) {
-            device = DarwinTunDevice.open(((TunAddress) localAddress).ifName(), 0);
+            device = DarwinTunDevice.open(((TunAddress) localAddress).ifName(), config.getMtu());
         }
         else if (PlatformDependent.isWindows()) {
             device = WindowsTunDevice.open(((TunAddress) localAddress).ifName());
         }
         else {
-            device = LinuxTunDevice.open(((TunAddress) localAddress).ifName(), 0);
+            device = LinuxTunDevice.open(((TunAddress) localAddress).ifName(), config.getMtu());
         }
     }
 
@@ -172,7 +171,7 @@ public class TunChannel extends AbstractChannel {
                 "unsupported message type: " + StringUtil.simpleClassName(msg) + EXPECTED_TYPES);
     }
 
-    @SuppressWarnings({ "java:S135", "java:S1117", "java:S1181", "java:S3776" })
+    @SuppressWarnings({ "java:S135", "java:S1117", "java:S1181", "java:S1874", "java:S3776" })
     private void doRead() {
         if (!readPending) {
             return;
