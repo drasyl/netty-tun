@@ -28,10 +28,9 @@ import io.netty.channel.ChannelMetadata;
 import io.netty.channel.ChannelOutboundBuffer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.ChannelPromise;
+import io.netty.channel.DefaultEventLoop;
 import io.netty.channel.EventLoop;
 import io.netty.channel.RecvByteBufAllocator;
-import io.netty.channel.nio.NioEventLoop;
-import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.internal.PlatformDependent;
 import io.netty.util.internal.StringUtil;
 import org.drasyl.channel.tun.jna.TunDevice;
@@ -67,7 +66,7 @@ public class TunChannel extends AbstractChannel {
     private final TunChannelConfig config = new DefaultTunChannelConfig(this);
     private final List<Object> readBuf = new ArrayList<>();
     private boolean readPending;
-    private final EventLoop readLoop = new NioEventLoopGroup(1).next();
+    private final EventLoop readLoop = new DefaultEventLoop();
     private TunDevice device;
 
     public TunChannel() {
@@ -245,7 +244,7 @@ public class TunChannel extends AbstractChannel {
 
     @Override
     protected boolean isCompatible(final EventLoop loop) {
-        return loop instanceof NioEventLoop;
+        return loop instanceof DefaultEventLoop;
     }
 
     @Override
