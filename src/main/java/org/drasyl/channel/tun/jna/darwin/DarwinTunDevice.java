@@ -72,12 +72,12 @@ public final class DarwinTunDevice extends AbstractTunDevice {
             (byte) (AF_INET >> 24), (byte) (AF_INET >> 16), (byte) (AF_INET >> 8), (byte) AF_INET
     }));
     private final int fd;
-    private final NativeLong mtu;
+    private final NativeLong readBytes;
 
     private DarwinTunDevice(final int fd, final int mtu, final TunAddress localAddress) {
         super(localAddress);
         this.fd = fd;
-        this.mtu = new NativeLong(mtu);
+        this.readBytes = new NativeLong((mtu + ADDRESS_FAMILY_SIZE));
     }
 
     public static TunDevice open(final String name, int mtu) throws IOException {
@@ -143,10 +143,9 @@ public final class DarwinTunDevice extends AbstractTunDevice {
         }
 
         // read from socket
-        final int capacity = ADDRESS_FAMILY_SIZE + mtu.intValue();
-        final ByteBuf maxByteBuf = alloc.buffer(capacity).writerIndex(capacity);
+        final ByteBuf maxByteBuf = alloc.buffer(readBytes.intValue()).writerIndex(readBytes.intValue());
         final ByteBuffer byteBuffer = maxByteBuf.nioBuffer();
-        final int bytesRead = read(fd, byteBuffer, mtu);
+        final int bytesRead = read(fd, byteBuffer, readBytes);
 
         // extract address family
         final int addressFamily = maxByteBuf.getInt(0);
