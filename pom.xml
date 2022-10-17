@@ -101,10 +101,17 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <jdk.version>11</jdk.version>
-        <java.version>11</java.version>
+
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
+
+        <javaModuleNameClassifier>${os.detected.name}.${os.detected.arch}</javaModuleNameClassifier>
+        <javaModuleName>io.netty.transport.kqueue.${javaModuleNameClassifier}</javaModuleName>
+        <jni.compiler.args.cflags>CFLAGS=-O3 -Werror -fno-omit-frame-pointer -Wunused-variable -fvisibility=hidden</jni.compiler.args.cflags>
+        <jni.compiler.args.ldflags>LDFLAGS=-z now -Wl,--no-whole-archive</jni.compiler.args.ldflags>
+        <nativeSourceDirectory>${project.basedir}/src/main/c</nativeSourceDirectory>
+
+        <jni.classifier>${os.detected.name}-${os.detected.arch}</jni.classifier>
     </properties>
 
     <dependencies>
@@ -129,105 +136,86 @@
     </dependencies>
 
     <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.10.0</version>
-                <configuration>
-                    <source>${maven.compiler.source}</source>
-                    <target>${maven.compiler.source}</target>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.0.0-M5</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-release-plugin</artifactId>
-                <version>2.5.3</version>
-                <configuration>
-                    <tagNameFormat>v@{project.version}</tagNameFormat>
-                    <localCheckout>true</localCheckout>
-                    <mavenExecutorId>forked-path</mavenExecutorId>
-                    <useReleaseProfile>false</useReleaseProfile>
-                    <releaseProfiles>release</releaseProfiles>
-                    <goals>deploy</goals>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>3.2.1</version>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <goals>
-                            <goal>jar-no-fork</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.3.2</version>
-                <executions>
-                    <execution>
-                        <id>attach-javadocs</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <doclint>none</doclint>
-                    <source>11</source>
-                </configuration>
-            </plugin>
-        </plugins>
+        <extensions>
+            <extension>
+                <groupId>kr.motd.maven</groupId>
+                <artifactId>os-maven-plugin</artifactId>
+                <version>1.7.0</version>
+            </extension>
+        </extensions>
     </build>
 
     <profiles>
         <profile>
-            <id>release</id>
+            <id>mac</id>
+            <activation>
+                <os>
+                    <family>mac</family>
+                </os>
+            </activation>
+            <properties>
+                <jni.compiler.args.ldflags>LDFLAGS=-Wl,-platform_version,macos,10.6,10.6</jni.compiler.args.ldflags>
+            </properties>
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-release-plugin</artifactId>
-                        <version>2.5.3</version>
-                        <configuration>
-                            <pushChanges>false</pushChanges>
-                        </configuration>
-                    </plugin>
-                    <!-- To sign the artifacts -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <version>3.0.1</version>
+                        <groupId>org.fusesource.hawtjni</groupId>
+                        <artifactId>maven-hawtjni-plugin</artifactId>
                         <executions>
                             <execution>
-                                <id>sign-artifacts</id>
-                                <phase>verify</phase>
+                                <id>build-native-lib</id>
+                                <configuration>
+                                    <name>netty_transport_native_kqueue_${os.detected.arch}</name>
+                                    <nativeSourceDirectory>${nativeSourceDirectory}</nativeSourceDirectory>
+                                    <libDirectory>${project.build.outputDirectory}</libDirectory>
+                                    <!-- We use Maven's artifact classifier instead.
+                                         This hack will make the hawtjni plugin to put the native library
+                                         under 'META-INF/native' rather than 'META-INF/native/${platform}'. -->
+                                    <platform>.</platform>
+                                    <configureArgs>
+                                        <arg>${jni.compiler.args.ldflags}</arg>
+                                        <arg>${jni.compiler.args.cflags}</arg>
+                                        <!-- support for __attribute__((weak_import)) by the linker was added in 10.2 (but 10.6 is the minimum we can use on 10.14) so ensure we
+                                             explicitly set the target platform. Otherwise we may get fatal link errors due to weakly linked
+                                             methods which are not expected to be present on MacOS (e.g. accept4). -->
+                                        <arg>MACOSX_DEPLOYMENT_TARGET=10.6</arg>
+                                        <configureArg>--libdir=${project.build.directory}/native-build/target/lib</configureArg>
+                                    </configureArgs>
+                                </configuration>
                                 <goals>
-                                    <goal>sign</goal>
+                                    <goal>generate</goal>
+                                    <goal>build</goal>
                                 </goals>
                             </execution>
                         </executions>
                     </plugin>
+
                     <plugin>
-                        <groupId>org.sonatype.plugins</groupId>
-                        <artifactId>nexus-staging-maven-plugin</artifactId>
-                        <version>1.6.12</version>
-                        <extensions>true</extensions>
-                        <configuration>
-                            <serverId>ossrh</serverId>
-                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
-                        </configuration>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <executions>
+                            <!-- Generate the JAR that contains the native library in it. -->
+                            <execution>
+                                <id>native-jar</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                                <configuration>
+                                    <archive>
+                                        <manifest>
+                                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                                        </manifest>
+                                        <manifestEntries>
+                                            <Bundle-NativeCode>META-INF/native/libnetty_transport_native_kqueue_${os.detected.arch}.jnilib; osname=MacOSX; processor=${os.detected.arch}</Bundle-NativeCode>
+                                            <Fragment-Host>io.netty.transport-classes-kqueue</Fragment-Host>
+                                            <Automatic-Module-Name>${javaModuleName}</Automatic-Module-Name>
+                                        </manifestEntries>
+                                        <index>true</index>
+<!--                                        <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>-->
+                                    </archive>
+                                    <classifier>${jni.classifier}</classifier>
+                                </configuration>
+                            </execution>
+                        </executions>
                     </plugin>
                 </plugins>
             </build>

@@ -19,21 +19,7 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.drasyl.channel.tun.jna.darwin;
-
-import com.sun.jna.NativeLong;
-
 /**
- * JNA mapping for <a href="https://opensource.apple.com/source/xnu/xnu-2782.30.5/bsd/sys/ioctl.h.auto.html">ioctl.h</a>.
+ * TUN device support for Darwin-based platforms.
  */
-@SuppressWarnings("java:S2974")
-final class Ioctl {
-    // get MTU size
-    public static final NativeLong SIOCGIFMTU = new NativeLong(0xc0206933L);
-    // set MTU size
-    public static final NativeLong SIOCSIFMTU = new NativeLong(0x80206934L);
-
-    private Ioctl() {
-        // JNA mapping
-    }
-}
+package org.drasyl.channel.tun.darwin;

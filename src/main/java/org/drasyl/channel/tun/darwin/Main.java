@@ -19,16 +19,34 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.drasyl.channel.tun.jna.darwin;
+package org.drasyl.channel.tun.darwin;
 
-/**
- * JNA mapping for <a href="https://opensource.apple.com/source/xnu/xnu-2050.18.24/bsd/net/if_utun.h.auto.html">if_utun.h</a>.
- */
-final class IfUtun {
-    static final String UTUN_CONTROL_NAME = "com.apple.net.utun_control";
-    static final int UTUN_OPT_IFNAME = 2;
+import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.DefaultEventLoopGroup;
+import org.drasyl.channel.tun.TunAddress;
+import org.drasyl.channel.tun.TunChannel;
+import org.drasyl.channel.tun.darwin.Native;
 
-    private IfUtun() {
-        // JNA mapping
+public class Main {
+    public static void main(String[] args) {
+        if (false) {
+            System.out.println(Native.open(0, 0));
+        }
+        else if (true) {
+            final Bootstrap b = new Bootstrap()
+                    .group(new DefaultEventLoopGroup(1))
+                    .channel(TunChannel.class)
+                    .handler(new ChannelInitializer<>() {
+                        @Override
+                        protected void initChannel(final Channel ch) {
+                            final ChannelPipeline p = ch.pipeline();
+                        }
+                    });
+            final Channel ch = b.bind(new TunAddress(null)).syncUninterruptibly().channel();
+            ch.closeFuture().syncUninterruptibly();
+        }
     }
 }

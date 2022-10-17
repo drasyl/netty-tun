@@ -34,7 +34,7 @@ import io.netty.channel.RecvByteBufAllocator;
 import io.netty.util.internal.PlatformDependent;
 import io.netty.util.internal.StringUtil;
 import org.drasyl.channel.tun.jna.TunDevice;
-import org.drasyl.channel.tun.jna.darwin.DarwinTunDevice;
+import org.drasyl.channel.tun.darwin.DarwinTunDevice;
 import org.drasyl.channel.tun.jna.linux.LinuxTunDevice;
 import org.drasyl.channel.tun.jna.windows.WindowsTunDevice;
 
