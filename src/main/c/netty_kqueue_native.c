@@ -1,6 +1,21 @@
-#include <jni.h>
+/*
+ * Copyright 2016 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 #include <net/if.h>
 #include <net/if_utun.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/kern_control.h>
@@ -8,28 +23,32 @@
 #include <sys/sys_domain.h>
 #include <unistd.h>
 
-#include<stdio.h>
+#include "netty_unix_errors.h"
+#include "netty_unix_jni.h"
+#include "netty_unix_util.h"
+#include "netty_unix.h"
 
-static jobject tun_address(JNIEnv *env, char* if_name) {
-    jclass cls = (*env)->FindClass(env, "org/drasyl/channel/tun/TunAddress");
-    jmethodID constructor = (*env)->GetMethodID(env, cls, "<init>", "(Ljava/lang/String;)V");
-    jobject object = (*env)->NewObject(env, cls, constructor, (*env)->NewStringUTF(env, if_name));
-    return object;
-}
+// Add define if NETTY_BUILD_STATIC is defined so it is picked up in netty_jni_util.c
+#ifdef NETTY_BUILD_STATIC
+#define NETTY_JNI_UTIL_BUILD_STATIC
+#endif
 
-static jobject darwin_tun_device(JNIEnv *env, jint fd, jint mtu, jobject local_address) {
-    jclass cls = (*env)->FindClass(env, "org/drasyl/channel/tun/darwin/DarwinTunDevice");
-    jmethodID constructor = (*env)->GetMethodID(env, cls, "<init>", "(IILorg/drasyl/channel/tun/TunAddress;)V");
-    jobject object = (*env)->NewObject(env, cls, constructor, fd, mtu, local_address);
-    return object;
-}
+#define STATICALLY_CLASSNAME "org/drasyl/channel/tun/darwin/DarwinStaticallyReferencedJniMethods"
+#define NATIVE_CLASSNAME "org/drasyl/channel/tun/darwin/Native"
 
-JNIEXPORT jobject JNICALL Java_org_drasyl_channel_tun_darwin_Native_open(JNIEnv *env, jclass clazz, jint index, jint mtu) {
+static jclass tunAddressClass = NULL;
+static jmethodID tunAddressMethodId = NULL;
+static jclass tunDeviceClass = NULL;
+static jmethodID tunDeviceMethodId = NULL;
+static const char* staticPackagePrefix = NULL;
+static int register_unix_called = 0;
+
+static jobject netty_kqueue_native_open(JNIEnv* env, jclass clazz, jint index, jint mtu) {
     // create socket
     int fd = socket(AF_SYSTEM, SOCK_DGRAM, SYSPROTO_CONTROL);
 
     if (fd == -1) {
-        perror("socket(...)");
+        netty_unix_errors_throwIOException(env, "socket() failed");
         return NULL;
     }
 
@@ -37,7 +56,7 @@ JNIEXPORT jobject JNICALL Java_org_drasyl_channel_tun_darwin_Native_open(JNIEnv 
     struct ctl_info ctlInfo;
     memset(&ctlInfo, 0, sizeof(ctlInfo));
     if (strlcpy(ctlInfo.ctl_name, UTUN_CONTROL_NAME, sizeof(ctlInfo.ctl_name)) >= sizeof(ctlInfo.ctl_name)) {
-        fprintf(stderr, "UTUN_CONTROL_NAME too long");
+        netty_unix_errors_throwIOException(env, "UTUN_CONTROL_NAME too long");
         goto error;
     }
     if (ioctl(fd, CTLIOCGINFO, &ctlInfo) == -1) {
@@ -53,7 +72,7 @@ JNIEXPORT jobject JNICALL Java_org_drasyl_channel_tun_darwin_Native_open(JNIEnv 
     address.ss_sysaddr = AF_SYS_CONTROL;
     address.sc_unit = 0;
     if (connect(fd, (struct sockaddr *)&address, sizeof(address)) == -1) {
-        perror("connect(...)");
+        netty_unix_errors_throwIOException(env, "connect() failed");
         goto error;
     }
 
@@ -61,7 +80,7 @@ JNIEXPORT jobject JNICALL Java_org_drasyl_channel_tun_darwin_Native_open(JNIEnv 
     char sockName[IFNAMSIZ];
     int sockNameLen = IFNAMSIZ;
     if (getsockopt(fd, SYSPROTO_CONTROL, UTUN_OPT_IFNAME, sockName, (uint32_t*) &sockNameLen) == -1) {
-        perror("getsockopt(...)");
+        netty_unix_errors_throwIOException(env, "getsockopt() failed");
         goto error;
     }
 
@@ -72,21 +91,21 @@ JNIEXPORT jobject JNICALL Java_org_drasyl_channel_tun_darwin_Native_open(JNIEnv 
         // set mtu
         ifr.ifr_mtu = mtu;
         if (ioctl(fd, SIOCSIFMTU, &ifr) == -1) {
-            perror("ioctl(SIOCSIFMTU)");
+            netty_unix_errors_throwIOException(env, "ioctl(SIOCSIFMTU) failed");
             goto error;
         }
     }
     else {
         // get mtu
         if (ioctl(fd, SIOCGIFMTU, &ifr) == -1) {
-           perror("ioctl(SIOCGIFMTU)");
+           netty_unix_errors_throwIOException(env, "ioctl(SIOCGIFMTU) failed");
            goto error;
         }
         mtu = ifr.ifr_ifru.ifru_mtu;
     }
 
-    jobject tun_addr = tun_address(env, sockName);
-    jobject darwin_tun_dev = darwin_tun_device(env, fd, mtu, tun_addr);
+    jobject tun_addr = (*env)->NewObject(env, tunAddressClass, tunAddressMethodId, (*env)->NewStringUTF(env, sockName));
+    jobject darwin_tun_dev = (*env)->NewObject(env, tunDeviceClass, tunDeviceMethodId, fd, mtu, tun_addr);
 
     return darwin_tun_dev;
 error:
@@ -94,61 +113,107 @@ error:
     return NULL;
 }
 
-JNIEXPORT jint JNICALL Java_org_drasyl_channel_tun_darwin_Native_close(JNIEnv *env, jclass clazz, jint fd) {
-    return close(fd);
+static void netty_kqueue_native_noop(JNIEnv* env, jclass clazz) {
+    // noop
 }
 
-JNIEXPORT jint JNICALL Java_org_drasyl_channel_tun_darwin_Native_read(JNIEnv *env, jclass clazz, jint fd, jobject jbuffer, jint pos, jint limit) {
-    void* buffer = (*env)->GetDirectBufferAddress(env, jbuffer);
-
-    return read(fd, buffer + pos, (size_t) (limit - pos));
+static jint netty_kqueue_native_registerUnix(JNIEnv* env, jclass clazz) {
+    register_unix_called = 1;
+    return netty_unix_register(env, staticPackagePrefix);
 }
 
-JNIEXPORT jlong JNICALL Java_org_drasyl_channel_tun_darwin_Native_readAddress(JNIEnv *env, jclass clazz, jint fd, jlong address, jint pos, jint limit) {
-    void* buffer = (void *) (intptr_t) address;
-//    printf("READ fd = %i\n", fd);
-//    printf("READ buffer = %p\n", buffer);
-//    printf("READ buffer + pos = %p\n", buffer + pos);
+// JNI Method Registration Table Begin
+static const JNINativeMethod statically_referenced_fixed_method_table[] = {
+};
+static const jint statically_referenced_fixed_method_table_size = sizeof(statically_referenced_fixed_method_table) / sizeof(statically_referenced_fixed_method_table[0]);
+static const JNINativeMethod fixed_method_table[] = {
+  { "open", "(II)Lorg/drasyl/channel/tun/darwin/DarwinTunDevice;", (void *) netty_kqueue_native_open },
+  { "noop", "()V", (void *) netty_kqueue_native_noop },
+  { "registerUnix", "()I", (void *) netty_kqueue_native_registerUnix }
+};
+static const jint fixed_method_table_size = sizeof(fixed_method_table) / sizeof(fixed_method_table[0]);
+// JNI Method Registration Table End
 
-    return read(fd, buffer + pos, (size_t) (limit - pos));
+// IMPORTANT: If you add any NETTY_JNI_UTIL_LOAD_CLASS or NETTY_JNI_UTIL_FIND_CLASS calls you also need to update
+//            Native to reflect that.
+static jint netty_kqueue_native_JNI_OnLoad(JNIEnv* env, const char* packagePrefix) {
+    int staticallyRegistered = 0;
+    int nativeRegistered = 0;
+
+    // We must register the statically referenced methods first!
+    if (netty_jni_util_register_natives(env,
+            packagePrefix,
+            STATICALLY_CLASSNAME,
+            statically_referenced_fixed_method_table,
+            statically_referenced_fixed_method_table_size) != 0) {
+        goto error;
+    }
+    staticallyRegistered = 1;
+
+    // Register the methods which are not referenced by static member variables
+    if (netty_jni_util_register_natives(env, packagePrefix, NATIVE_CLASSNAME, fixed_method_table, fixed_method_table_size) != 0) {
+        goto error;
+    }
+    nativeRegistered = 1;
+
+    // Initialize this module
+
+    NETTY_JNI_UTIL_LOAD_CLASS(env, tunAddressClass, "org/drasyl/channel/tun/TunAddress", error);
+    NETTY_JNI_UTIL_GET_METHOD(env, tunAddressClass, tunAddressMethodId, "<init>", "(Ljava/lang/String;)V", error);
+
+    NETTY_JNI_UTIL_LOAD_CLASS(env, tunDeviceClass, "org/drasyl/channel/tun/darwin/DarwinTunDevice", error);
+    NETTY_JNI_UTIL_GET_METHOD(env, tunDeviceClass, tunDeviceMethodId, "<init>", "(IILorg/drasyl/channel/tun/TunAddress;)V", error);
+
+    staticPackagePrefix = packagePrefix;
+
+    return NETTY_JNI_UTIL_JNI_VERSION;
+error:
+   if (staticallyRegistered == 1) {
+        netty_jni_util_unregister_natives(env, packagePrefix, STATICALLY_CLASSNAME);
+   }
+   if (nativeRegistered == 1) {
+        netty_jni_util_unregister_natives(env, packagePrefix, NATIVE_CLASSNAME);
+   }
+   return JNI_ERR;
 }
 
-JNIEXPORT jint JNICALL Java_org_drasyl_channel_tun_darwin_Native_write(JNIEnv *env, jclass clazz, jint fd, jobject jbuffer, jint pos, jint limit) {
-    void* buffer = (*env)->GetDirectBufferAddress(env, jbuffer);
-//    printf("WRITE fd           = %i\n", fd);
-//    printf("WRITE jbuffer      = %p\n", jbuffer);
-//    printf("WRITE buffer       = %p\n", buffer);
-//    printf("WRITE buffer + pos = %p\n", buffer + pos);
-//    printf("WRITE limit        = %i\n", limit);
-//    printf("WRITE pos          = %i\n", pos);
-//    printf("WRITE limit - pos  = %lu\n", (size_t) (limit - pos));
-
-    int res = write(fd, buffer + pos, (size_t) (limit - pos));
-    if (res == -1) {
-        perror("write(...)");
+static void netty_kqueue_native_JNI_OnUnload(JNIEnv* env) {
+    if (register_unix_called == 1) {
+        register_unix_called = 0;
+        netty_unix_unregister(env, staticPackagePrefix);
     }
 
-    return res;
+    NETTY_JNI_UTIL_UNLOAD_CLASS(env, tunAddressClass);
+    NETTY_JNI_UTIL_UNLOAD_CLASS(env, tunDeviceClass);
+
+    netty_jni_util_unregister_natives(env, staticPackagePrefix, STATICALLY_CLASSNAME);
+    netty_jni_util_unregister_natives(env, staticPackagePrefix, NATIVE_CLASSNAME);
+
+    if (staticPackagePrefix != NULL) {
+        free((void *) staticPackagePrefix);
+        staticPackagePrefix = NULL;
+    }
 }
 
-JNIEXPORT jint JNICALL Java_org_drasyl_channel_tun_darwin_Native_writeAddress(JNIEnv *env, jclass clazz, jint fd, jlong address, jint pos, jint limit) {
-    void* buffer = (void *) (intptr_t) address;
+// We build with -fvisibility=hidden so ensure we mark everything that needs to be visible with JNIEXPORT
+// https://mail.openjdk.java.net/pipermail/core-libs-dev/2013-February/014549.html
 
-    return write(fd, buffer + pos, (size_t) (limit - pos));
+// Invoked by the JVM when statically linked
+JNIEXPORT jint JNI_OnLoad_netty_transport_native_kqueue(JavaVM* vm, void* reserved) {
+    return netty_jni_util_JNI_OnLoad(vm, reserved, "netty_transport_native_kqueue", netty_kqueue_native_JNI_OnLoad);
 }
 
-//JNIEXPORT jlong JNICALL Java_org_drasyl_channel_tun_darwin_Native_writevAddresses(JNIEnv *env, jclass clazz, jint fd, jlong memoryAddress, jint length) {
-//    struct iovec* iov = (struct iovec*) (intptr_t) memoryAddress;
-//
-//    ssize_t res;
-//    int err;
-//    do {
-//        res = writev(fd, iov, length);
-//        // keep on writing if it was interrupted
-//    } while (res == -1 && ((err = errno) == EINTR));
-//
-//    if (res < 0) {
-//        return -err;
-//    }
-//    return (jlong) res;
-//}
+// Invoked by the JVM when statically linked
+JNIEXPORT void JNI_OnUnload_netty_transport_native_kqueue(JavaVM* vm, void* reserved) {
+    netty_jni_util_JNI_OnUnload(vm, reserved, netty_kqueue_native_JNI_OnUnload);
+}
+
+#ifndef NETTY_BUILD_STATIC
+JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved) {
+    return netty_jni_util_JNI_OnLoad(vm, reserved, "netty_transport_native_kqueue", netty_kqueue_native_JNI_OnLoad);
+}
+
+JNIEXPORT void JNI_OnUnload(JavaVM* vm, void* reserved) {
+    netty_jni_util_JNI_OnUnload(vm, reserved, netty_kqueue_native_JNI_OnUnload);
+}
+#endif /* NETTY_BUILD_STATIC */

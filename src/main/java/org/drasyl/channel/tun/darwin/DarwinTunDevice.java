@@ -24,6 +24,7 @@ package org.drasyl.channel.tun.darwin;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.Unpooled;
+import io.netty.channel.unix.FileDescriptor;
 import org.drasyl.channel.tun.Tun4Packet;
 import org.drasyl.channel.tun.Tun6Packet;
 import org.drasyl.channel.tun.TunAddress;
@@ -46,12 +47,12 @@ public final class DarwinTunDevice extends AbstractTunDevice {
     private static final ByteBuf ADDRESS_FAMILY_BUF = Unpooled.unreleasableBuffer(Unpooled.wrappedBuffer(new byte[]{
             (byte) (AF_INET >> 24), (byte) (AF_INET >> 16), (byte) (AF_INET >> 8), (byte) AF_INET
     }));
-    private final int fd;
     private final int readBytes;
+    private final FileDescriptor socket;
 
     private DarwinTunDevice(final int fd, final int mtu, final TunAddress localAddress) {
         super(localAddress);
-        this.fd = fd;
+        this.socket = new FileDescriptor(fd);
         this.readBytes = mtu + ADDRESS_FAMILY_SIZE;
     }
 
@@ -74,13 +75,7 @@ public final class DarwinTunDevice extends AbstractTunDevice {
             index = 0;
         }
 
-        final DarwinTunDevice device = Native.open(index, mtu);
-
-        if (device == null) {
-            throw new IOException("Create an endpoint for communication failed.");
-        }
-
-        return device;
+        return Native.open(index, mtu);
     }
 
     @Override
@@ -94,11 +89,11 @@ public final class DarwinTunDevice extends AbstractTunDevice {
         final int bytesRead;
         if (maxByteBuf.hasMemoryAddress()) {
             // has a memory address so use optimized call
-            bytesRead = Native.readAddress(fd, maxByteBuf.memoryAddress(), maxByteBuf.readerIndex(), maxByteBuf.capacity());
+            bytesRead = socket.readAddress(maxByteBuf.memoryAddress(), maxByteBuf.readerIndex(), maxByteBuf.capacity());
         }
         else {
             final ByteBuffer byteBuffer = maxByteBuf.internalNioBuffer(0, maxByteBuf.readableBytes());
-            bytesRead = Native.read(fd, byteBuffer, byteBuffer.position(), byteBuffer.limit());
+            bytesRead = socket.read(byteBuffer, byteBuffer.position(), byteBuffer.limit());
         }
 
         // shrink bytebuf to actual required size
@@ -136,11 +131,11 @@ public final class DarwinTunDevice extends AbstractTunDevice {
             msg.release();
 
             if (byteBuf.hasMemoryAddress()) {
-                Native.writeAddress(fd, byteBuf.memoryAddress(), byteBuf.readerIndex(), byteBuf.writerIndex());
+                socket.writeAddress(byteBuf.memoryAddress(), byteBuf.readerIndex(), byteBuf.writerIndex());
             }
             else {
                 final ByteBuffer byteBuffer = byteBuf.internalNioBuffer(0, byteBuf.readableBytes());
-                Native.write(fd, byteBuffer, byteBuffer.position(), byteBuffer.limit());
+                socket.write(byteBuffer, byteBuffer.position(), byteBuffer.limit());
             }
 
             byteBuf.release();
@@ -156,7 +151,7 @@ public final class DarwinTunDevice extends AbstractTunDevice {
             closed = true;
 
             // close tun device
-            Native.close(fd);
+            socket.close();
         }
     }
 }

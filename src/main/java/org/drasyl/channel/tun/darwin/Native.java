@@ -21,6 +21,10 @@
  */
 package org.drasyl.channel.tun.darwin;
 
+import io.netty.channel.DefaultFileRegion;
+import io.netty.channel.unix.PeerCredentials;
+import io.netty.channel.unix.Unix;
+import io.netty.util.internal.ClassInitializerUtil;
 import io.netty.util.internal.NativeLibraryLoader;
 import io.netty.util.internal.PlatformDependent;
 import io.netty.util.internal.ThrowableUtil;
@@ -28,12 +32,31 @@ import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 
 final class Native {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(Native.class);
 
     static {
-        loadNativeLibrary();
+        // Preload all classes that will be used in the OnLoad(...) function of JNI to eliminate the possiblity of a
+        // class-loader deadlock. This is a workaround for https://github.com/netty/netty/issues/11209.
+
+        // This needs to match all the classes that are loaded via NETTY_JNI_UTIL_LOAD_CLASS or looked up via
+        // NETTY_JNI_UTIL_FIND_CLASS.
+        ClassInitializerUtil.tryLoadClasses(Native.class,
+                // netty_kqueue_bsdsocket
+                PeerCredentials.class, DefaultFileRegion.class, FileChannel.class, java.io.FileDescriptor.class
+        );
+
+        try {
+            // First, try calling a side-effect free JNI method to see if the library was already
+            // loaded by the application.
+            noop();
+        } catch (UnsatisfiedLinkError ignore) {
+            // The library was not previously loaded, load it now.
+            loadNativeLibrary();
+        }
+        Unix.registerInternal(() -> registerUnix());
     }
 
     private Native() {
@@ -63,15 +86,7 @@ final class Native {
 
     public static native DarwinTunDevice open(final int index, final int mtu);
 
-    public static native DarwinTunDevice close(final int fd);
+    public static native void noop();
 
-    public static native int read(final int fd, ByteBuffer buf, int pos, int limit);
-
-    public static native int readAddress(final int fd, long memoryAddress, int pos, int limit);
-
-    public static native int write(final int fd, ByteBuffer buf, int pos, int limit);
-
-    public static native int writeAddress(final int fd, long memoryAddress, int pos, int limit);
-
-    public static native long writevAddresses(final int fd, long memoryAddress, int length);
+    private static native int registerUnix();
 }
