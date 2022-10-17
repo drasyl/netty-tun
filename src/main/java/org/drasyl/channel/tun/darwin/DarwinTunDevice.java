@@ -23,8 +23,9 @@ package org.drasyl.channel.tun.darwin;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
-import io.netty.buffer.Unpooled;
+import io.netty.channel.EventLoop;
 import io.netty.channel.unix.FileDescriptor;
+import io.netty.channel.unix.IovArray;
 import org.drasyl.channel.tun.Tun4Packet;
 import org.drasyl.channel.tun.Tun6Packet;
 import org.drasyl.channel.tun.TunAddress;
@@ -44,19 +45,21 @@ import static org.drasyl.channel.tun.jna.shared.Socket.AF_INET;
 public final class DarwinTunDevice extends AbstractTunDevice {
     private static final String DEVICE_PREFIX = "utun";
     private static final IllegalArgumentException ILLEGAL_NAME_EXCEPTION = new IllegalArgumentException("Device name must be 'utun<index>' or null.");
-    private static final ByteBuf ADDRESS_FAMILY_BUF = Unpooled.unreleasableBuffer(Unpooled.wrappedBuffer(new byte[]{
+    private static final byte[] ADDRESS_FAMILY_BUF = new byte[]{
             (byte) (AF_INET >> 24), (byte) (AF_INET >> 16), (byte) (AF_INET >> 8), (byte) AF_INET
-    }));
+    };
     private final int readBytes;
     private final FileDescriptor socket;
+    private final IovArray iovArray = new IovArray();
 
+    @SuppressWarnings("java:S1144")
     private DarwinTunDevice(final int fd, final int mtu, final TunAddress localAddress) {
         super(localAddress);
         this.socket = new FileDescriptor(fd);
         this.readBytes = mtu + ADDRESS_FAMILY_SIZE;
     }
 
-    public static TunDevice open(final String name, int mtu) throws IOException {
+    public static TunDevice open(final String name, int mtu) {
         final int index;
         if (name != null) {
             if (name.startsWith(DEVICE_PREFIX)) {
@@ -124,14 +127,22 @@ public final class DarwinTunDevice extends AbstractTunDevice {
 
         if (msg instanceof Tun4Packet) {
             // add address family
-            final ByteBuf byteBuf = alloc.directBuffer(ADDRESS_FAMILY_SIZE + msg.content().readableBytes(), ADDRESS_FAMILY_SIZE + msg.content().readableBytes());
-            ADDRESS_FAMILY_BUF.resetReaderIndex();
-            byteBuf.writeBytes(ADDRESS_FAMILY_BUF);
-            byteBuf.writeBytes(msg.content());
-            msg.release();
+            final ByteBuf byteBuf = alloc.compositeDirectBuffer(2).addComponents(
+                    true,
+                    alloc.directBuffer(ADDRESS_FAMILY_BUF.length).writeBytes(ADDRESS_FAMILY_BUF),
+                    msg.content()
+            );
 
             if (byteBuf.hasMemoryAddress()) {
                 socket.writeAddress(byteBuf.memoryAddress(), byteBuf.readerIndex(), byteBuf.writerIndex());
+            }
+            else if (byteBuf.nioBufferCount() > 1) {
+                final IovArray array = cleanArray();
+                array.add(byteBuf, byteBuf.readerIndex(), byteBuf.readableBytes());
+                int cnt = array.count();
+                assert cnt != 0;
+
+                socket.writevAddresses(array.memoryAddress(0), cnt);
             }
             else {
                 final ByteBuffer byteBuffer = byteBuf.internalNioBuffer(0, byteBuf.readableBytes());
@@ -153,5 +164,13 @@ public final class DarwinTunDevice extends AbstractTunDevice {
             // close tun device
             socket.close();
         }
+    }
+
+    /**
+     * Return a cleared {@link IovArray} that can be used for writes in this {@link EventLoop}.
+     */
+    IovArray cleanArray() {
+        iovArray.clear();
+        return iovArray;
     }
 }
