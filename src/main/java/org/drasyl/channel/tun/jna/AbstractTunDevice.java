@@ -21,7 +21,8 @@
  */
 package org.drasyl.channel.tun.jna;
 
-import org.drasyl.channel.tun.TunAddress;
+
+import io.netty.channel.socket.TunAddress;
 
 import static java.util.Objects.requireNonNull;
 

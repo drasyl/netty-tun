@@ -22,8 +22,8 @@
 package org.drasyl.channel.tun.jna;
 
 import io.netty.buffer.ByteBufAllocator;
+import io.netty.channel.socket.TunAddress;
 import io.netty.channel.socket.TunPacket;
-import org.drasyl.channel.tun.TunAddress;
 
 import java.io.Closeable;
 import java.io.IOException;

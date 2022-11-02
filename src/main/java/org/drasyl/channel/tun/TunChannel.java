@@ -28,9 +28,11 @@ import io.netty.channel.ChannelMetadata;
 import io.netty.channel.ChannelOutboundBuffer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.ChannelPromise;
+import io.netty.channel.DefaultChannelConfig;
 import io.netty.channel.DefaultEventLoop;
 import io.netty.channel.EventLoop;
 import io.netty.channel.RecvByteBufAllocator;
+import io.netty.channel.socket.TunAddress;
 import io.netty.channel.socket.TunPacket;
 import io.netty.util.internal.StringUtil;
 import org.drasyl.channel.tun.jna.TunDevice;
@@ -61,7 +63,7 @@ public class TunChannel extends AbstractChannel {
     private static final String EXPECTED_TYPES =
             " (expected: " + StringUtil.simpleClassName(TunPacket.class) + ')';
     final Runnable readTask = this::doRead;
-    private final TunChannelConfig config = new DefaultTunChannelConfig(this);
+    private final ChannelConfig config = new DefaultChannelConfig(this);
     private final List<Object> readBuf = new ArrayList<>();
     private boolean readPending;
     private final EventLoop readLoop = new DefaultEventLoop();
@@ -77,7 +79,7 @@ public class TunChannel extends AbstractChannel {
     }
 
     @Override
-    public TunChannelConfig config() {
+    public ChannelConfig config() {
         return config;
     }
 
