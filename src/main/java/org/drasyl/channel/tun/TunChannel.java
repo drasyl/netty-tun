@@ -31,11 +31,8 @@ import io.netty.channel.ChannelPromise;
 import io.netty.channel.DefaultEventLoop;
 import io.netty.channel.EventLoop;
 import io.netty.channel.RecvByteBufAllocator;
-import io.netty.util.internal.PlatformDependent;
 import io.netty.util.internal.StringUtil;
 import org.drasyl.channel.tun.jna.TunDevice;
-import org.drasyl.channel.tun.jna.darwin.DarwinTunDevice;
-import org.drasyl.channel.tun.jna.linux.LinuxTunDevice;
 import org.drasyl.channel.tun.jna.windows.WindowsTunDevice;
 
 import java.io.IOException;
@@ -110,15 +107,7 @@ public class TunChannel extends AbstractChannel {
 
     @Override
     protected void doBind(final SocketAddress localAddress) throws Exception {
-        if (PlatformDependent.isOsx()) {
-            device = DarwinTunDevice.open(((TunAddress) localAddress).ifName(), config.getMtu());
-        }
-        else if (PlatformDependent.isWindows()) {
-            device = WindowsTunDevice.open(((TunAddress) localAddress).ifName());
-        }
-        else {
-            device = LinuxTunDevice.open(((TunAddress) localAddress).ifName(), config.getMtu());
-        }
+        device = WindowsTunDevice.open(((TunAddress) localAddress).ifName());
     }
 
     @Override
