@@ -38,11 +38,19 @@ public final class Native {
         if (!PlatformDependent.isWindows()) {
             throw new IllegalStateException("Only supported on Windows");
         }
+        String staticLibName = "wintun";
+        String sharedLibName = staticLibName + '_' + PlatformDependent.normalizedArch();
         ClassLoader cl = PlatformDependent.getClassLoader(Native.class);
         try {
-            NativeLibraryLoader.load("windows64/netty_transport_native_wintun", cl);
+            NativeLibraryLoader.load(sharedLibName, cl);
         } catch (UnsatisfiedLinkError e1) {
-            throw e1;
+            try {
+                NativeLibraryLoader.load(staticLibName, cl);
+                logger.debug("Failed to load {}", sharedLibName, e1);
+            } catch (UnsatisfiedLinkError e2) {
+                ThrowableUtil.addSuppressed(e1, e2);
+                throw e1;
+            }
         }
     }
 

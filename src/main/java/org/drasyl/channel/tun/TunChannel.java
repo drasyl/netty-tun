@@ -31,6 +31,7 @@ import io.netty.channel.ChannelPromise;
 import io.netty.channel.DefaultEventLoop;
 import io.netty.channel.EventLoop;
 import io.netty.channel.RecvByteBufAllocator;
+import io.netty.channel.socket.TunPacket;
 import io.netty.util.internal.StringUtil;
 import org.drasyl.channel.tun.jna.TunDevice;
 import org.drasyl.channel.tun.jna.windows.WindowsTunDevice;

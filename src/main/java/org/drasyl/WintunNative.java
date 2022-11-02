@@ -21,17 +21,7 @@
  */
 package org.drasyl;
 
-import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.EventLoopGroup;
-import io.netty.handler.logging.LogLevel;
-import io.netty.handler.logging.LoggingHandler;
 import org.drasyl.channel.wintun.Wintun;
-import org.drasyl.channel.wintun.WintunAddress;
-import org.drasyl.channel.wintun.WintunEventLoopGroup;
-import org.drasyl.channel.wintun.WintunTunChannel;
 
 public class WintunNative {
     public static void main(String[] args) {
