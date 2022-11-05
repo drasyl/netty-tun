@@ -26,8 +26,8 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
-import io.netty.handler.logging.LogLevel;
-import io.netty.handler.logging.LoggingHandler;
+import org.drasyl.channel.Ping4Handler;
+import org.drasyl.channel.Ping6Handler;
 import org.drasyl.channel.wintun.WintunAddress;
 import org.drasyl.channel.wintun.WintunEventLoopGroup;
 import org.drasyl.channel.wintun.WintunTunChannel;
@@ -44,7 +44,9 @@ public class WintunChannel {
                         protected void initChannel(Channel ch) {
                             ChannelPipeline p = ch.pipeline();
 
-                            p.addLast(new LoggingHandler(LogLevel.INFO));
+                            //p.addLast(new LoggingHandler(LogLevel.INFO));
+                            p.addLast(new Ping4Handler());
+                            p.addLast(new Ping6Handler());
                         }
                     });
             Channel ch = b.bind(new WintunAddress()).syncUninterruptibly().channel();

@@ -38,7 +38,7 @@ import java.util.Queue;
 import java.util.concurrent.Executor;
 
 import static java.lang.Math.min;
-import static org.drasyl.channel.tun.jna.windows.Wintun.WintunGetReadWaitEvent;
+import static org.drasyl.channel.wintun.Wintun.WintunGetReadWaitEvent;
 
 final class WintunEventLoop extends SingleThreadEventLoop {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(WintunEventLoop.class);
@@ -93,19 +93,17 @@ final class WintunEventLoop extends SingleThreadEventLoop {
                 int strategy = selectStrategy.calculateStrategy(selectNowSupplier, hasTasks());
                 switch (strategy) {
                     case SelectStrategy.CONTINUE:
-                        System.out.println("WintunEventLoop.run CONTINUE");
+                        logger.info("WintunEventLoop.run CONTINUE");
                         continue;
 
                     case SelectStrategy.BUSY_WAIT:
-                        System.out.println("WintunEventLoop.run BUSY_WAIT");
+                        logger.info("WintunEventLoop.run BUSY_WAIT");
                         // fall-through to SELECT since the busy-wait is not supported with wintun
                         // FIXME: ist das so?
 
                     case SelectStrategy.SELECT:
-                        System.out.println("WintunEventLoop.run SELECT");
-                        logger.info("wintunWait CALL");
+                        logger.info("WintunEventLoop.run SELECT");
                         strategy = wintunWait(); // FIXME
-                        logger.info("wintunWait CALLED");
 
                     default:
                 }
@@ -170,6 +168,7 @@ final class WintunEventLoop extends SingleThreadEventLoop {
             long totalDelay = delayNanos(System.nanoTime()) / 1000000;
             int delayMillis = (int) min(totalDelay / 1000000L, Integer.MAX_VALUE);
             int res = Kernel32.INSTANCE.WaitForSingleObject(WintunGetReadWaitEvent(channel.session), (int) min(totalDelay - delayMillis, Integer.MAX_VALUE));
+            logger.info("res = " + res);
             // 0 WAIT_OBJECT_0
             // 258 WAIT_TIMEOUT
             return res == 0 ? 1 : 0;

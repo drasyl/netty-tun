@@ -39,7 +39,7 @@ sudo /sbin/ip link set dev utun0 up
 
 ```powershell
 # Windows
-$InterfaceIndex = Get-NetAdapter -Name utun0 | select ifIndex -expandproperty ifIndex
+$InterfaceIndex = Get-NetAdapter -Name tun | select ifIndex -expandproperty ifIndex
 New-NetIPAddress -InterfaceIndex $InterfaceIndex -IPAddress 10.10.10.10 -PrefixLength 24
 
 # to allow peers access local services, you may mark the tun network as "private"

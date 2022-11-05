@@ -27,6 +27,9 @@ import io.netty.channel.FixedRecvByteBufAllocator;
 
 public class WintunTunChannelConfig extends DefaultChannelConfig {
     public WintunTunChannelConfig(Channel channel) {
-        super(channel, new FixedRecvByteBufAllocator(2048));
+        super(channel);
+        FixedRecvByteBufAllocator allocator = new FixedRecvByteBufAllocator(2048);
+        allocator.maxMessagesPerRead(Integer.MAX_VALUE);
+        setRecvByteBufAllocator(allocator);
     }
 }

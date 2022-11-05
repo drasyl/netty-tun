@@ -19,12 +19,20 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.drasyl;
+package org.drasyl.channel.wintun;
 
-import org.drasyl.channel.wintun.Wintun;
+import io.netty.channel.RecvByteBufAllocator;
+import io.netty.channel.RecvByteBufAllocator.DelegatingHandle;
+import io.netty.channel.RecvByteBufAllocator.ExtendedHandle;
+import io.netty.util.UncheckedBooleanSupplier;
 
-public class WintunNative {
-    public static void main(String[] args) {
-        Wintun.ensureAvailability();
+class WintunRecvByteAllocatorHandle extends DelegatingHandle implements ExtendedHandle {
+    WintunRecvByteAllocatorHandle(ExtendedHandle handle) {
+        super(handle);
+    }
+
+    @Override
+    public boolean continueReading(UncheckedBooleanSupplier maybeMoreDataSupplier) {
+        return ((ExtendedHandle) delegate()).continueReading(maybeMoreDataSupplier);
     }
 }

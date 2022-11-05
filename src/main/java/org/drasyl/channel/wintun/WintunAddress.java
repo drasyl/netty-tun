@@ -21,13 +21,11 @@
  */
 package org.drasyl.channel.wintun;
 
-import org.drasyl.channel.tun.TunChannel;
-
 import java.net.SocketAddress;
 import java.util.Objects;
 
 /**
- * A {@link SocketAddress} implementation that identifies a tun device to which a {@link TunChannel}
+ * A {@link SocketAddress} implementation that identifies a tun device to which a {@link WintunTunChannel}
  * can be bound to.
  */
 public class WintunAddress extends SocketAddress {
