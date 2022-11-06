@@ -31,7 +31,7 @@ import io.netty.util.internal.ObjectUtil;
 import io.netty.util.internal.PlatformDependent;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
-import org.drasyl.channel.tun.jna.windows.Kernel32;
+import org.drasyl.channel.wintun.win32.Kernel32;
 import org.drasyl.channel.wintun.WintunTunChannel.WintunTunChannelUnsafe;
 
 import java.util.Queue;
@@ -69,6 +69,10 @@ final class WintunEventLoop extends SingleThreadEventLoop {
 
     public void add(final WintunTunChannel ch) {
         this.channel = ch;
+    }
+
+    public void remove(WintunTunChannel ch) {
+        this.channel = null;
     }
 
     private static Queue<Runnable> newTaskQueue(
@@ -177,7 +181,9 @@ final class WintunEventLoop extends SingleThreadEventLoop {
     }
 
     private void closeAll() {
-        System.out.println("WintunEventLoop.closeAll");
+        if (channel != null) {
+            channel.unsafe().close(channel.unsafe().voidPromise());
+        }
     }
 
     private static void handleLoopException(Throwable t) {

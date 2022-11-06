@@ -24,15 +24,41 @@ package org.drasyl.channel.wintun;
 import com.sun.jna.LastErrorException;
 import com.sun.jna.Pointer;
 import com.sun.jna.WString;
+import io.netty.util.internal.NativeLibraryLoader;
+import io.netty.util.internal.PlatformDependent;
 import io.netty.util.internal.SystemPropertyUtil;
+import io.netty.util.internal.ThrowableUtil;
 import io.netty.util.internal.UnstableApi;
-import org.drasyl.channel.tun.jna.windows.Guid;
-import org.drasyl.channel.tun.jna.windows.WinDef;
-import org.drasyl.channel.tun.jna.windows.WinNT;
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
+import org.drasyl.channel.wintun.win32.Guid;
+import org.drasyl.channel.wintun.win32.WinDef;
+import org.drasyl.channel.wintun.win32.WinNT;
 
 @UnstableApi
 public final class Wintun {
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(Wintun.class);
     private static final Throwable UNAVAILABILITY_CAUSE;
+
+    private static void loadNativeLibrary() {
+        if (!PlatformDependent.isWindows()) {
+            throw new IllegalStateException("Only supported on Windows");
+        }
+        String staticLibName = "wintun";
+        String sharedLibName = staticLibName + '_' + PlatformDependent.normalizedArch();
+        ClassLoader cl = PlatformDependent.getClassLoader(Wintun.class);
+        try {
+            NativeLibraryLoader.load(sharedLibName, cl);
+        } catch (UnsatisfiedLinkError e1) {
+            try {
+                NativeLibraryLoader.load(staticLibName, cl);
+                logger.debug("Failed to load {}", sharedLibName, e1);
+            } catch (UnsatisfiedLinkError e2) {
+                ThrowableUtil.addSuppressed(e1, e2);
+                throw e1;
+            }
+        }
+    }
 
     static {
         Throwable cause = null;
@@ -41,7 +67,7 @@ public final class Wintun {
                     "Native transport was explicit disabled with -Dio.netty.transport.noNative=true");
         } else {
             try {
-                Native.noop();
+                loadNativeLibrary();
             } catch (Throwable t) {
                 cause = t;
             }
@@ -199,4 +225,18 @@ public final class Wintun {
      */
     public static native void WintunSendPacket(WINTUN_SESSION_HANDLE Session,
                                                final Pointer Packet) throws LastErrorException;
+
+    /**
+     * A handle representing Wintun adapter.
+     */
+    @SuppressWarnings("java:S101")
+    public static class WINTUN_ADAPTER_HANDLE extends WinNT.HANDLE {
+    }
+
+    /**
+     * A handle representing Wintun session.
+     */
+    @SuppressWarnings("java:S101")
+    public static class WINTUN_SESSION_HANDLE extends WinNT.HANDLE {
+    }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Heiko Bornholdt and Kevin Röbert
+ * Copyright (c) 2021-2022 Heiko Bornholdt and Kevin Röbert
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,6 +20,6 @@
  * OR OTHER DEALINGS IN THE SOFTWARE.
  */
 /**
- * TUN device support for Window-based platforms.
+ * Win32 API.
  */
-package org.drasyl.channel.tun.jna.windows;
+package org.drasyl.channel.wintun.win32;

@@ -42,13 +42,13 @@ import io.netty.channel.socket.Tun6Packet;
 import io.netty.channel.socket.TunAddress;
 import io.netty.channel.socket.TunPacket;
 import io.netty.util.UncheckedBooleanSupplier;
-import org.drasyl.channel.tun.jna.windows.Guid.GUID;
-import org.drasyl.channel.tun.jna.windows.WinDef.DWORD;
+import org.drasyl.channel.wintun.win32.Guid.GUID;
+import org.drasyl.channel.wintun.win32.WinDef.DWORD;
 
 import java.io.IOException;
 import java.net.SocketAddress;
 
-import static org.drasyl.channel.tun.jna.windows.WinError.ERROR_NO_MORE_ITEMS;
+import static org.drasyl.channel.wintun.win32.WinError.ERROR_NO_MORE_ITEMS;
 import static org.drasyl.channel.wintun.Wintun.WintunAllocateSendPacket;
 import static org.drasyl.channel.wintun.Wintun.WintunCloseAdapter;
 import static org.drasyl.channel.wintun.Wintun.WintunCreateAdapter;
@@ -63,8 +63,8 @@ public class WintunTunChannel extends AbstractChannel {
     private static final ChannelMetadata METADATA = new ChannelMetadata(false);
     public static final DWORD CAPACITY = new DWORD(0x400000);
     private final ChannelConfig config = new WintunTunChannelConfig(this);
-    private volatile WINTUN_ADAPTER_HANDLE adapter = null;
-    volatile WINTUN_SESSION_HANDLE session = null;
+    private volatile Wintun.WINTUN_ADAPTER_HANDLE adapter = null;
+    volatile Wintun.WINTUN_SESSION_HANDLE session = null;
     private TunAddress localAddress;
 
     public WintunTunChannel() {
@@ -138,6 +138,11 @@ public class WintunTunChannel extends AbstractChannel {
             WintunCloseAdapter(adapter);
             adapter = null;
         }
+    }
+
+    @Override
+    protected void doDeregister() {
+        ((WintunEventLoop) eventLoop()).remove(this);
     }
 
     @Override
