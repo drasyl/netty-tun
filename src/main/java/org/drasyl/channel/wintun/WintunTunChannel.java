@@ -23,7 +23,6 @@ package org.drasyl.channel.wintun;
 
 import com.sun.jna.LastErrorException;
 import com.sun.jna.Memory;
-import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.WString;
 import io.netty.buffer.ByteBuf;
@@ -49,22 +48,22 @@ import java.io.IOException;
 import java.net.SocketAddress;
 
 import static org.drasyl.channel.wintun.win32.WinError.ERROR_NO_MORE_ITEMS;
-import static org.drasyl.channel.wintun.Wintun.WintunAllocateSendPacket;
-import static org.drasyl.channel.wintun.Wintun.WintunCloseAdapter;
-import static org.drasyl.channel.wintun.Wintun.WintunCreateAdapter;
-import static org.drasyl.channel.wintun.Wintun.WintunEndSession;
-import static org.drasyl.channel.wintun.Wintun.WintunReceivePacket;
-import static org.drasyl.channel.wintun.Wintun.WintunReleaseReceivePacket;
-import static org.drasyl.channel.wintun.Wintun.WintunSendPacket;
-import static org.drasyl.channel.wintun.Wintun.WintunStartSession;
+import static org.drasyl.channel.wintun.Native.WintunAllocateSendPacket;
+import static org.drasyl.channel.wintun.Native.WintunCloseAdapter;
+import static org.drasyl.channel.wintun.Native.WintunCreateAdapter;
+import static org.drasyl.channel.wintun.Native.WintunEndSession;
+import static org.drasyl.channel.wintun.Native.WintunReceivePacket;
+import static org.drasyl.channel.wintun.Native.WintunReleaseReceivePacket;
+import static org.drasyl.channel.wintun.Native.WintunSendPacket;
+import static org.drasyl.channel.wintun.Native.WintunStartSession;
 
 public class WintunTunChannel extends AbstractChannel {
-    private static final WString TUNNEL_TYPE = new WString("drasyl");
+    static final WString TUNNEL_TYPE = new WString("drasyl");
     private static final ChannelMetadata METADATA = new ChannelMetadata(false);
     public static final DWORD CAPACITY = new DWORD(0x400000);
     private final ChannelConfig config = new WintunTunChannelConfig(this);
-    private volatile Wintun.WINTUN_ADAPTER_HANDLE adapter = null;
-    volatile Wintun.WINTUN_SESSION_HANDLE session = null;
+    private volatile Native.WINTUN_ADAPTER_HANDLE adapter = null;
+    volatile Native.WINTUN_SESSION_HANDLE session = null;
     private TunAddress localAddress;
 
     public WintunTunChannel() {
@@ -306,7 +305,7 @@ public class WintunTunChannel extends AbstractChannel {
     private int doReadBytes(ByteBuf byteBuf) {
         try {
             // read bytes
-            final Pointer packetSizePointer = new Memory(Native.POINTER_SIZE);
+            final Pointer packetSizePointer = new Memory(com.sun.jna.Native.POINTER_SIZE);
             final Pointer packetPointer = WintunReceivePacket(session, packetSizePointer);
 
             // shrink bytebuf to actual required size

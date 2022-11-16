@@ -38,7 +38,7 @@ import java.util.Queue;
 import java.util.concurrent.Executor;
 
 import static java.lang.Math.min;
-import static org.drasyl.channel.wintun.Wintun.WintunGetReadWaitEvent;
+import static org.drasyl.channel.wintun.Native.WintunGetReadWaitEvent;
 
 final class WintunEventLoop extends SingleThreadEventLoop {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(WintunEventLoop.class);

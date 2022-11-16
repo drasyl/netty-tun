@@ -28,12 +28,15 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import org.drasyl.channel.Ping4Handler;
 import org.drasyl.channel.Ping6Handler;
+import org.drasyl.channel.wintun.Wintun;
 import org.drasyl.channel.wintun.WintunAddress;
 import org.drasyl.channel.wintun.WintunEventLoopGroup;
 import org.drasyl.channel.wintun.WintunTunChannel;
 
 public class WintunChannel {
     public static void main(String[] args) {
+        Wintun.ensureAvailability();
+
         EventLoopGroup group = new WintunEventLoopGroup();
         try {
             Bootstrap b = new Bootstrap()
