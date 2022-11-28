@@ -50,7 +50,7 @@ Set-NetConnectionProfile -InterfaceIndex $InterfaceIndex -NetworkCategory "Priva
 
 The MTU size of the created network interface is by default 1500 on macOS/Linux and 65535 on Windows.
 
-On macOS/Linux is can be adjusted by passing the channel option [`TunChannelOption.TUN_MTU`](https://github.com/drasyl-overlay/netty-tun/blob/master/src/main/java/org/drasyl/channel/tun/TunChannelOption.java) to the [`Bootstrap`](https://netty.io/4.1/api/io/netty/bootstrap/Bootstrap.html) object.
+On macOS/Linux is can be adjusted by passing the channel option [`TunChannelOption.TUN_MTU`](https://github.com/drasyl/netty-tun/blob/master/src/main/java/org/drasyl/channel/tun/TunChannelOption.java) to the [`Bootstrap`](https://netty.io/4.1/api/io/netty/bootstrap/Bootstrap.html) object.
 
 On Windows you have to use the following command:
 ```powershell
