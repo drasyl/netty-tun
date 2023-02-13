@@ -111,7 +111,7 @@
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-transport</artifactId>
-            <version>4.1.87.Final</version>
+            <version>4.1.88.Final</version>
         </dependency>
         <dependency>
             <groupId>net.java.dev.jna</groupId>
