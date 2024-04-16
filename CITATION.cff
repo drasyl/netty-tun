@@ -1,0 +1,22 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: netty-tun
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Heiko
+    family-names: Bornholdt
+    orcid: 'https://orcid.org/0000-0003-0013-7966'
+    affiliation: Universität Hamburg
+    email: heiko.bornholdt@uni-hamburg.de
+repository-code: 'https://github.com/drasyl/netty-tun'
+abstract: >-
+  netty channel communicating via TUN devices (tested on
+  macOS, Ubuntu/Linux, and Windows 10/11).
+license: MIT
+version: 1.2.2
+date-released: '2023-04-25'
