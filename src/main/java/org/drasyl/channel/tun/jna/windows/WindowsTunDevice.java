@@ -62,6 +62,7 @@ public final class WindowsTunDevice extends AbstractTunDevice {
     public static final WString TUNNEL_TYPE = new WString("drasyl");
     private final WINTUN_ADAPTER_HANDLE adapter;
     private final WINTUN_SESSION_HANDLE session;
+    protected boolean closed;
 
     private WindowsTunDevice(final WINTUN_ADAPTER_HANDLE adapter,
                              final WINTUN_SESSION_HANDLE session,

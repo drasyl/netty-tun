@@ -56,11 +56,4 @@ public interface TunDevice extends Closeable {
      * @throws IOException if write failed
      */
     void writePacket(final ByteBufAllocator alloc, final TunPacket msg) throws IOException;
-
-    /**
-     * Returns whether the device is closed or not.
-     *
-     * @return {@code true} if the device has been closed.
-     */
-    boolean isClosed();
 }

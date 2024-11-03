@@ -59,6 +59,7 @@ public final class LinuxTunDevice extends AbstractTunDevice {
     private static final IllegalArgumentException ILLEGAL_NAME_EXCEPTION = new IllegalArgumentException("Device name must be an ASCII string shorter than 16 characters or null.");
     private final int fd;
     private final NativeLong mtu;
+    protected boolean closed;
 
     private LinuxTunDevice(final int fd, final int mtu, final TunAddress localAddress) {
         super(localAddress);

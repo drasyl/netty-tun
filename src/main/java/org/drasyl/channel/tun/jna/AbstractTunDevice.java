@@ -27,7 +27,6 @@ import static java.util.Objects.requireNonNull;
 
 public abstract class AbstractTunDevice implements TunDevice {
     protected final TunAddress localAddress;
-    protected boolean closed;
 
     protected AbstractTunDevice(TunAddress localAddress) {
         this.localAddress = requireNonNull(localAddress);
@@ -36,10 +35,5 @@ public abstract class AbstractTunDevice implements TunDevice {
     @Override
     public TunAddress localAddress() {
         return localAddress;
-    }
-
-    @Override
-    public boolean isClosed() {
-        return closed;
     }
 }

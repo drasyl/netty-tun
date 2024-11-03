@@ -68,6 +68,7 @@ public class TunChannel extends AbstractChannel {
     private boolean readPending;
     private final EventLoop readLoop = new DefaultEventLoop();
     private TunDevice device;
+    private boolean closed;
 
     public TunChannel() {
         super(null);
@@ -85,12 +86,12 @@ public class TunChannel extends AbstractChannel {
 
     @Override
     public boolean isOpen() {
-        return device == null || !device.isClosed();
+        return !closed;
     }
 
     @Override
     public boolean isActive() {
-        return device != null && isOpen();
+        return !closed && device != null;
     }
 
     @Override
@@ -128,8 +129,11 @@ public class TunChannel extends AbstractChannel {
 
     @Override
     protected void doClose() throws Exception {
-        if (device != null) {
-            device.close();
+        if (!closed) {
+            closed = true;
+            if (device != null) {
+                device.close();
+            }
         }
     }
 

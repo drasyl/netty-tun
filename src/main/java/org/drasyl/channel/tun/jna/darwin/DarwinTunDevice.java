@@ -73,6 +73,7 @@ public final class DarwinTunDevice extends AbstractTunDevice {
     }));
     private final int fd;
     private final NativeLong readBytes;
+    protected boolean closed;
 
     private DarwinTunDevice(final int fd, final int mtu, final TunAddress localAddress) {
         super(localAddress);
