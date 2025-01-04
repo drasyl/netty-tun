@@ -31,6 +31,7 @@ import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.CompositeByteBuf;
 import io.netty.buffer.Unpooled;
 import org.drasyl.channel.tun.Tun4Packet;
+import org.drasyl.channel.tun.Tun6Packet;
 import org.drasyl.channel.tun.TunAddress;
 import org.drasyl.channel.tun.TunPacket;
 import org.drasyl.channel.tun.jna.AbstractTunDevice;
@@ -162,7 +163,7 @@ public final class DarwinTunDevice extends AbstractTunDevice {
                 return new Tun4Packet(actualByteBuf);
 
             case AF_INET6:
-                return new Tun4Packet(actualByteBuf);
+                return new Tun6Packet(actualByteBuf);
 
             default:
                 throw new IOException("Unknown address family: " + addressFamily);
