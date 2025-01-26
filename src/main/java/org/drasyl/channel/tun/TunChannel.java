@@ -134,6 +134,7 @@ public class TunChannel extends AbstractChannel {
             if (device != null) {
                 device.close();
             }
+            readLoop.shutdownGracefully();
         }
     }
 
