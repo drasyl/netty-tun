@@ -2,7 +2,8 @@
 
 netty channel communicating via TUN devices (tested on macOS, Ubuntu/Linux, and Windows 10/11).
 
-**If you would like this feature merged into Netty, I would greatly appreciate it if you could leave a :+1: on [my pull request](https://github.com/netty/netty/pull/12960). Thank you!**
+> [!IMPORTANT]  
+> If you would like this feature merged into Netty, I would greatly appreciate it if you could leave a :+1: on [my pull request](https://github.com/netty/netty/pull/12960). Thank you!
 
 ## How to use
 
