@@ -28,7 +28,7 @@ import com.sun.jna.Structure.FieldOrder;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 
 /**
- * JNA mapping for <a href="https://opensource.apple.com/source/xnu/xnu-6153.41.3/bsd/sys/kern_control.h.auto.html">kern_control.h</a>.
+ * JNA mapping for <a href="https://github.com/apple-oss-distributions/xnu/blob/rel/xnu-6153/bsd/sys/kern_control.h">kern_control.h</a>.
  */
 final class KernControl {
     static final NativeLong CTLIOCGINFO = new NativeLong(0xc0644e03L);

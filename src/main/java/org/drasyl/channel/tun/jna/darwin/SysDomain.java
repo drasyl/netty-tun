@@ -22,7 +22,7 @@
 package org.drasyl.channel.tun.jna.darwin;
 
 /**
- * JNA mapping for <a href="https://opensource.apple.com/source/xnu/xnu-344/bsd/sys/sys_domain.h.auto.html">sys_domain.h</a>.
+ * JNA mapping for <a href="https://github.com/apple-oss-distributions/xnu/blob/rel/xnu-6153/bsd/sys/sys_domain.h">sys_domain.h</a>.
  */
 final class SysDomain {
     static final int SYSPROTO_CONTROL = 2;

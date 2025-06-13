@@ -28,7 +28,7 @@ import com.sun.jna.Union;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 
 /**
- * JNA mapping for <a href="https://opensource.apple.com/source/xnu/xnu-344/bsd/net/if.h.auto.html">if.h</a>.
+ * JNA mapping for <a href="https://github.com/apple-oss-distributions/xnu/blob/rel/xnu-6153/bsd/net/if.h">if.h</a>.
  */
 @SuppressWarnings("java:S2974")
 public final class If {

@@ -24,7 +24,7 @@ package org.drasyl.channel.tun.jna.darwin;
 import com.sun.jna.NativeLong;
 
 /**
- * JNA mapping for <a href="https://opensource.apple.com/source/xnu/xnu-2782.30.5/bsd/sys/ioctl.h.auto.html">ioctl.h</a>.
+ * JNA mapping for <a href="https://github.com/apple-oss-distributions/xnu/blob/rel/xnu-6153/bsd/sys/sockio.h">sockio.h</a>.
  */
 @SuppressWarnings("java:S2974")
 final class Ioctl {
