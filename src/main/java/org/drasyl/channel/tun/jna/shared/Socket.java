@@ -22,7 +22,7 @@
 package org.drasyl.channel.tun.jna.shared;
 
 /**
- * <a href="https://opensource.apple.com/source/xnu/xnu-344/bsd/sys/socket.h.auto.html">sys/socket.h</a>
+ * <a href="https://github.com/apple-oss-distributions/xnu/blob/rel/xnu-6153/bsd/sys/socket.h">socket.h</a>
  * constants.
  */
 public final class Socket {
